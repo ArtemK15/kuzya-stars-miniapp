@@ -1,0 +1,220 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b0b18">
+  <title>KUZYA STARS SHOP</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 22px 16px 35px;
+      background: #0b0b18;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+    }
+
+    .header {
+      text-align: center;
+      padding: 20px 10px 26px;
+      background: linear-gradient(145deg, #20134a, #111126);
+      border: 1px solid #39256e;
+      border-radius: 22px;
+      margin-bottom: 25px;
+    }
+
+    .logo {
+      font-size: 42px;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 25px;
+      letter-spacing: 1px;
+    }
+
+    .subtitle {
+      color: #b9a7ff;
+      font-size: 13px;
+      margin-top: 9px;
+    }
+
+    h2 {
+      font-size: 19px;
+      margin: 25px 0 14px;
+    }
+
+    .products {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .product {
+      background: #151527;
+      border: 1px solid #2d2b4c;
+      border-radius: 17px;
+      padding: 18px 10px;
+      text-align: center;
+    }
+
+    .star {
+      font-size: 31px;
+      margin-bottom: 9px;
+    }
+
+    .quantity {
+      font-size: 19px;
+      font-weight: bold;
+      margin-bottom: 7px;
+    }
+
+    .price {
+      color: #b9a7ff;
+      font-size: 15px;
+      margin-bottom: 14px;
+    }
+
+    button {
+      width: 100%;
+      border: 0;
+      border-radius: 11px;
+      padding: 12px 8px;
+      background: linear-gradient(100deg, #7548e8, #a15cff);
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:active {
+      opacity: 0.8;
+    }
+
+    .notice {
+      margin-top: 22px;
+      padding: 15px;
+      background: #151527;
+      border: 1px solid #2d2b4c;
+      border-radius: 14px;
+      color: #b9b7cf;
+      font-size: 13px;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    .footer {
+      margin-top: 24px;
+      text-align: center;
+      color: #77758f;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="logo">⭐</div>
+    <h1>KUZYA STARS SHOP</h1>
+    <div class="subtitle">ТВОЙ МИР TELEGRAM STARS</div>
+  </header>
+
+  <h2>⭐ Покупка Telegram Stars</h2>
+
+  <div class="products">
+    <div class="product">
+      <div class="star">⭐</div>
+      <div class="quantity">50 Stars</div>
+      <div class="price">75 ₽</div>
+      <button onclick="selectProduct(50, 75)">Выбрать</button>
+    </div>
+
+    <div class="product">
+      <div class="star">⭐</div>
+      <div class="quantity">100 Stars</div>
+      <div class="price">147 ₽</div>
+      <button onclick="selectProduct(100, 147)">Выбрать</button>
+    </div>
+
+    <div class="product">
+      <div class="star">⭐</div>
+      <div class="quantity">150 Stars</div>
+      <div class="price">221 ₽</div>
+      <button onclick="selectProduct(150, 221)">Выбрать</button>
+    </div>
+
+    <div class="product">
+      <div class="star">⭐</div>
+      <div class="quantity">250 Stars</div>
+      <div class="price">370 ₽</div>
+      <button onclick="selectProduct(250, 370)">Выбрать</button>
+    </div>
+
+    <div class="product">
+      <div class="star">⭐</div>
+      <div class="quantity">500 Stars</div>
+      <div class="price">735 ₽</div>
+      <button onclick="selectProduct(500, 735)">Выбрать</button>
+    </div>
+
+    <div class="product">
+      <div class="star">⭐</div>
+      <div class="quantity">1000 Stars</div>
+      <div class="price">1423 ₽</div>
+      <button onclick="selectProduct(1000, 1423)">Выбрать</button>
+    </div>
+
+    <div class="product">
+      <div class="star">⭐</div>
+      <div class="quantity">1500 Stars</div>
+      <div class="price">2144 ₽</div>
+      <button onclick="selectProduct(1500, 2144)">Выбрать</button>
+    </div>
+
+    <div class="product">
+      <div class="star">⭐</div>
+      <div class="quantity">2000 Stars</div>
+      <div class="price">2830 ₽</div>
+      <button onclick="selectProduct(2000, 2830)">Выбрать</button>
+    </div>
+  </div>
+
+  <div class="notice">
+    💎 Выбери подходящий пакет Stars.<br>
+    Оформление и оплата пока находятся в разработке.
+  </div>
+
+  <div class="footer">
+    KUZYA STARS SHOP · Telegram Mini App
+  </div>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+
+    if (tg) {
+      tg.ready();
+      tg.expand();
+    }
+
+    function selectProduct(quantity, price) {
+      if (tg) {
+        tg.showAlert(
+          `Выбран пакет ${quantity} Stars.\nЦена: ${price} ₽.\n\nПодключение оформления заказа — следующий этап.`
+        );
+      } else {
+        alert(
+          `Выбран пакет ${quantity} Stars.\nЦена: ${price} ₽.\n\nОформление заказа пока не подключено.`
+        );
+      }
+    }
+  </script>
+
+</body>
+</html>
