@@ -215,6 +215,48 @@
       }
     }
   </script>
+  
+<script>
+async function loadCatalog() {
+  try {
+    const response = await fetch(
+      "https://kuzya-stars-api.onrender.com/api/catalog"
+    );
+
+    if (!response.ok) {
+      throw new Error("Ошибка загрузки каталога");
+    }
+
+    const data = await response.json();
+    const products = document.querySelectorAll(".product");
+
+    data.packages.forEach((item, index) => {
+      const product = products[index];
+
+      if (!product) return;
+
+      product.querySelector(".quantity").textContent =
+        item.stars + " Stars";
+
+      product.querySelector(".price").textContent =
+        item.price_rub + " ₽";
+
+      const button = product.querySelector("button");
+      if (button) {
+        button.setAttribute(
+          "onclick",
+          `selectProduct(${item.stars}, ${item.price_rub})`
+        );
+      }
+    });
+  } catch (error) {
+    console.error("Не удалось загрузить каталог:", error);
+  }
+}
+
+loadCatalog();
+</script>
+
 
 </body>
 </html>
