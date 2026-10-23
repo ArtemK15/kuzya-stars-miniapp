@@ -71,7 +71,10 @@
     <div class="orderline" id="giftOrderName"></div>
     <div class="orderline" id="giftOrderPrice"></div>
     <div class="orderline" id="giftOrderStock"></div>
-    <p style="font-size:12px;color:#aaa;line-height:1.5">Каталог отображает утверждённые цены и начальные остатки. Оформление заказа, оплата XTR и списание остатка из Mini App ещё не подключены.</p>
+    <label for="giftRecipient" style="display:block;text-align:left;margin:14px 0 6px;color:#ddd6ff">Username получателя в Telegram</label>
+    <input id="giftRecipient" autocomplete="off" placeholder="@username" style="width:100%;padding:13px;border-radius:10px;border:1px solid #6d4bc3;background:#0b0b18;color:#fff;font-size:15px">
+    <p style="font-size:12px;color:#aaa;line-height:1.5">Оплата откроется в Telegram Stars (XTR). После успешной оплаты заказ появится у владельца; подарок отправляется вручную.</p>
+    <button id="payGiftButton" onclick="payForGift()">⭐ Оплатить через Telegram Stars</button>
     <button class="secondary" onclick="cancelGiftSelection()">❌ Отменить выбор</button>
     <button class="secondary" onclick="backToGifts()">⬅️ К подаркам</button>
   </section>
@@ -87,18 +90,78 @@
       tg.ready();
       tg.expand();
     }
-    let currentOrder = null;
+    const API_BASE = "https://kuzya-stars-bot.onrender.com";
+    let selectedGift = null;
+    let invoiceBusy = false;
     function selectGift(name, price, stock) {
+      selectedGift = {name, price, stock};
+      document.getElementById("giftRecipient").value = "";
+      document.getElementById("payGiftButton").disabled = false;
+      document.getElementById("payGiftButton").textContent = "⭐ Оплатить через Telegram Stars";
       document.getElementById("giftOrderName").textContent = "Подарок: " + name;
       document.getElementById("giftOrderPrice").textContent = "Цена: " + price + " XTR";
       document.getElementById("giftOrderStock").textContent = "Доступно по настройкам магазина: " + stock + " шт.";
       document.getElementById("giftCheckout").style.display = "block";
       document.getElementById("giftCheckout").scrollIntoView({behavior:"smooth", block:"start"});
     }
+    async function payForGift() {
+      if (invoiceBusy) return;
+      if (!tg || !tg.initData || !tg.openInvoice) {
+        alert("Открой магазин внутри Telegram, чтобы оплатить подарок.");
+        return;
+      }
+      if (!selectedGift) {
+        alert("Сначала выбери подарок.");
+        return;
+      }
+      const recipient = document.getElementById("giftRecipient").value.trim();
+      if (!/^@?[A-Za-z0-9_]{5,32}$/.test(recipient)) {
+        alert("Введи корректный Telegram username получателя (5–32 символа).");
+        return;
+      }
+      invoiceBusy = true;
+      const button = document.getElementById("payGiftButton");
+      button.disabled = true;
+      button.textContent = "Создаём счёт...";
+      try {
+        const response = await fetch(API_BASE + "/api/gifts/invoice", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            initData: tg.initData,
+            gift_name: selectedGift.name,
+            recipient: recipient
+          })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.detail || "Не удалось создать счёт");
+        tg.openInvoice(result.invoice_url, (status) => {
+          if (status === "paid") {
+            document.getElementById("giftOrderPrice").textContent = "Оплата подтверждена · заказ №" + result.order_id;
+            document.getElementById("payGiftButton").textContent = "✅ Оплачено";
+            document.getElementById("giftOrderStock").textContent = "Владелец магазина получил уведомление. Подарок будет отправлен вручную.";
+          } else if (status === "cancelled") {
+            button.disabled = false;
+            button.textContent = "⭐ Оплатить через Telegram Stars";
+          } else if (status === "failed") {
+            button.disabled = false;
+            button.textContent = "Повторить оплату";
+            alert("Telegram не смог завершить оплату. Попробуй ещё раз.");
+          }
+        });
+      } catch (error) {
+        alert(error.message || "Ошибка создания счёта.");
+        button.disabled = false;
+        button.textContent = "⭐ Оплатить через Telegram Stars";
+      } finally {
+        invoiceBusy = false;
+      }
+    }
     function closeGift() {
       document.getElementById("giftCheckout").style.display = "none";
     }
     function cancelGiftSelection() {
+      selectedGift = null;
       closeGift();
       document.getElementById("giftOrderName").textContent = "";
       document.getElementById("giftOrderPrice").textContent = "";
