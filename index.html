@@ -72,7 +72,8 @@
     <div class="orderline" id="giftOrderPrice"></div>
     <div class="orderline" id="giftOrderStock"></div>
     <p style="font-size:12px;color:#aaa;line-height:1.5">Каталог отображает утверждённые цены и начальные остатки. Оформление заказа, оплата XTR и списание остатка из Mini App ещё не подключены.</p>
-    <button class="secondary" onclick="closeGift()">Закрыть</button>
+    <button class="secondary" onclick="cancelGiftSelection()">❌ Отменить выбор</button>
+    <button class="secondary" onclick="backToGifts()">⬅️ К подаркам</button>
   </section>
   <section class="payment" id="payment" aria-live="polite"><h2>Оплата по СБП</h2><div class="orderline" id="orderNumber"></div><div class="orderline" id="orderAmount"></div><button onclick="openBankPayment()">🏦 Перейти к оплате в Т-Банк</button><img alt="QR-код для перевода по СБП" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAjUAAAI1AQAAAAAGbjY1AAAHBklEQVR42u2dz6orSxWHv5XE0zk46IAgglw7cMWxT2BvcOTgwJ06UvAddJjejnwJwUe4CModdoY+xe2IE4WrnYGcbunk56CqOp3sJHsfPAM5exUhJL0rX3p3ZfGr9aeqTXyM1s/4OM05znGOc5zjHOc45z6nt7EBtgZkNgPYLuLzdsnjEnqzJcDpE2u/zs5xzo0mSerYSJLUoBbpSCnVUEr1XBpgrjoLXQRQiDy8GygkdRfns0ovGlhDc+2bK6C9/Id8vJzjnDucPooguWxt2s7AtF1Q9mYLyt42HcDjEkBtksK1X2fnvArOfqZtOCpbH6yCsmObqQZ6U0eaQT53PucRsxpYPOnT+ng553VzhmvzuhdxohUWRwrpcQlz1bBd8pgriJzcvpzjnBe0UZqyJFvfPs6QgfEtAcwOW+MnA/T2i47NBnhvRZOEThecp+Ro6TY+kVT0reugc5zzIZzHEJtcwd7UhAfsgrHN9biATLbkcRldOfbhEx4ncY5zntHBk2a9B/juH0H8IRw5UsOP/kM9UM2pMn72NXw5QfwyeH+XrSUESMHUzFUDITSadPda63y8nOOcOzq45JTXsxmF1CiFZw5mC0qpylT1VoVI5gozY+c66BznPMMZqBcH3s54O0summhg9Vv+CsAP4QehHzD8E+B7B97OWZ3Z18HKbxa8OfDmMIZO7QHy39jvJQ18X/rVEg5WdnD4jlr0lwVvBvLBx8s5n3S8xUB7I29DNAXsuMu0XQzAdjHQ2yk0k8cwi2FHv87Occ4znGpMw62S+xb+Vuss9VCdffr96eXoiZ3egKmBQhP3baxv6dh0xOKWFjXmfpxznHOzRfOqMpFLbUjZWTzazKPhlQOAOmJXiPEUHa/Wj91TXKhuJBl9vJzzyXLEipR4u9sqBJb8vePUTjs2HWM8E6CQGosVngrVnhO9jPPVXEkvXQed45ybnEw2xjNzUQwgW8Mui1PNsjdbQW8hT6+dkUs7s/JunOTq0e6qFHpc1Dmvm7McX9ktTm9jhs7MtJ1rO6M4WDnAwczMFpQtj7lsCdkxmipE19Gvs3Oc8wzH1rA3SBWe2xkcrJqrAuZ6NNPfLUxJbQW5yKWt2cPl+bTXvqiGhysmP2lup875v+SsrvxO40/6PL5xvgJhfRZvASnmE9SYFPy8UJfC2Xq9Kn2OSTTUx8s5zrnSUvAjE4XUpuBHeaQIS12TQZ26t4x5Pcoj5aV9tRfGnv72cBa0OVexxvXLOa+Cs/owwFk8U6qyZKQhmUAqpS4lDXEZ+ybYbBaLOKO1ejzTOc650UK2rV/GIMp+dgQrayHDKASw/WlSvX5J1o0xF+2NWArz5Hx0NuP16+wc5zzbqufnq5uJexfsUA0Uw2mRQpnmtdVkcUOc0boOOsc5d/3BPJlVi2qTgj84UIa9kzrI0yRTUmvBuJ7aVzfRwfX0XBdpi4nuiV62Pl7Occ6L7JTRGRTFuF4vVKDNVc9VZ6qySSlMC+D1Lc5xzgvsa9MGKbTT1izF15Nuk7yDOqKjGITzXAeXE31LoNvf3vp4OedVcLJYcWmrVB8NFIp5vbK3h7R5RJWJvcXsQ3HwfW6d45z7nLl+voL+Hf07sm/sAf79mT7/TJ9/GR21Oi1YADi8A+wf0vCnUPQ16mBaxBBMNRZRN6Zmfrb7Q4jbbMZZadha1+eZznHO3XnmZTtG82xIG1MPkKV9qzsmKXhfr+cc5zzLGUjhxzXwZxB8BcYDLOHXf4PfwTylHr6A/ivWQBEPTSQuLRICKI5xfyTpfD2RTsLqOugc57ww3pLWrUc3sLHTVLQcog5W2ekWDq6DznHOB3Ou3R6x6mKJZjWtzPzxVTsNeb/kDx7jkodmcguVkCissrN67NjP7dQ5zrmng3HzpPAI4taM9S1SPS58yFK2Pvf6Fue8Ck4nOtGFo6KB9cB6BrBesAYWKd8W++mqfrXTQ6N+DZSaFFtP/Lg4JXX7co5zbrRFFKVThGS3Pj0DzLU1mA/0S7LQ+zjLW9As/9fs9vmsnv9yS8/m4+Wc18IxSPedZMbDkTp06p4WnVzRQZ6IYNzHbFJKvelOSb3JYiLXQec4574fN73PbIx/lOlGsmH1etnGpN5Gx+jEhfrM8t59Znm6qujWPjCNj5dzXi/ngaSGF219Zqch79CillREnfJ69TzWyWwuILnHW5zjnA/npP1bioHtMhZ5hs0Ex0XratDO2F3ZH+l6e3JfziiIK9dB57x6zuKDObmsPNiaWGpd9mbZxGNM9ycC7LTqwcfLOZ8mZ8x3743dXI3MZuyWEEzDrEr9qkxqID+yN4qX3Q9oIl71pb9nU4CPl3OcczveMn0PIU55jCthpUk8c9zWLIQ03Y9zjnNuN9NHwfR+nZ3jHOc4xznO+d/bfwHrkTqKA4s8wgAAAABJRU5ErkJggg=="><p>Отсканируй QR-код в банковском приложении и переведи указанную сумму. После перевода нажми «Я оплатил».</p><button onclick="markPaid()">Я оплатил</button><button class="secondary" onclick="closePayment()">Вернуться в каталог</button><p id="paymentStatus" class="orderline">Статус: ожидает подтверждения</p><p style="font-size:12px;color:#aaa">Оплата проверяется вручную. Нажатие кнопки не подтверждает поступление денег.</p></section>
   <div class="notice">
@@ -96,6 +97,17 @@
     }
     function closeGift() {
       document.getElementById("giftCheckout").style.display = "none";
+    }
+    function cancelGiftSelection() {
+      closeGift();
+      document.getElementById("giftOrderName").textContent = "";
+      document.getElementById("giftOrderPrice").textContent = "";
+      document.getElementById("giftOrderStock").textContent = "";
+      document.getElementById("giftProducts").scrollIntoView({behavior:"smooth", block:"start"});
+    }
+    function backToGifts() {
+      closeGift();
+      document.getElementById("giftProducts").scrollIntoView({behavior:"smooth", block:"start"});
     }
     function selectProduct(quantity, price) {
       const orderId = "KZ-" + Date.now().toString().slice(-8);
