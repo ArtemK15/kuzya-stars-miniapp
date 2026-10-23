@@ -118,7 +118,10 @@
       document.getElementById("payment").style.display = "block";
       document.getElementById("payment").scrollIntoView({behavior:"smooth", block:"start"});
     }
-    function openBankPayment() {\n      window.open("https://www.tbank-online.com/rm/r_WZlztaRLrZ.hhcTUJjdlP/gINWL2608", "_blank", "noopener,noreferrer");\n    }\n    function markPaid() {
+    function openBankPayment() {
+      window.open("https://www.tbank-online.com/rm/r_WZlztaRLrZ.hhcTUJjdlP/gINWL2608", "_blank", "noopener,noreferrer");
+    }
+    function markPaid() {
       if (!currentOrder) return;
       const message = "Покупатель сообщает об оплате. Заказ " + currentOrder.orderId + ", " + currentOrder.quantity + " Stars, " + currentOrder.price + " ₽. Требуется ручная проверка поступления средств.";
       document.getElementById("paymentStatus").textContent = "Статус: заявка об оплате отправлена; ожидает ручной проверки";
