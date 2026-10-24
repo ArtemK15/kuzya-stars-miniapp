@@ -55,6 +55,10 @@
     .cart-row button {width:auto;padding:8px 10px;background:#29283d}
     .nav {display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 18px}
     .nav button {background:#242238}
+    #analyticsPanel {border-color:#8c6a2d;background:radial-gradient(ellipse at top right,#29200f 0%,#15121d 45%,#0b0b18 100%);box-shadow:0 12px 32px #d4a94316}
+    #analyticsPanel h2 {color:#f4cc67;letter-spacing:.4px}
+    #analyticsPanel .analytics-card {background:linear-gradient(145deg,#171426,#0b0b18)!important;border-color:#8c6a2d!important}
+    #analyticsPanel .analytics-card strong {text-shadow:0 0 18px #f7d47a24}
     .profile {display:none;padding:16px;border:1px solid #6d4bc3;border-radius:16px;background:#151527;margin:16px 0}
     .profile-order {padding:10px 0;border-bottom:1px solid #343044;font-size:13px;line-height:1.5}
     .premium-card { background:linear-gradient(145deg,#241b0d,#14121a 75%); border:1px solid #d4a943; border-radius:17px; padding:17px 10px; text-align:center; box-shadow:inset 0 0 18px #d4a94312; }
@@ -80,16 +84,17 @@
     <button onclick="showTab('shop')">🏠 Магазин</button>
     <button onclick="showTab('cart')">🛒 Корзина <span id="cartCount">0</span></button>
     <button onclick="showTab('profile')">👤 Кабинет</button>
+    <button id="analyticsNavButton" onclick="showTab('analytics')" style="display:none">📊 Статистика</button>
     <button id="adminNavButton" onclick="showTab('admin')" style="display:none">🛠 Админ</button>
   </nav>
   <section class="profile" id="profilePanel">
     <h2>👤 Личный кабинет</h2><div id="profileInfo">Загрузка профиля Telegram…</div>
     <h3>📦 Мои заказы</h3><div id="profileOrders">Открываю историю заказов…</div>
   </section>
-  <section class="profile" id="adminPanel">
-    <h2>🛠 Панель администратора</h2>
-    <p class="section-subtitle">Данные заказов и остатков. Подтверждение оплаты и выдача товара по-прежнему выполняются через защищённые кнопки бота.</p>
-    <button onclick="loadAdminDashboard()">🔄 Обновить данные</button>
+  <section class="profile" id="analyticsPanel">
+    <h2>✨ KUZYA ANALYTICS</h2>
+    <p class="section-subtitle">Статистика посещаемости Mini App в реальном времени.</p>
+    <div style="display:flex;align-items:center;gap:8px;margin:12px 0 16px;color:#58e39b;font-size:12px;font-weight:bold"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#58e39b;box-shadow:0 0 10px #58e39b"></span> LIVE · Обновление при открытии панели</div>
     <div class="analytics-card" style="margin:16px 0;padding:16px;border:1px solid #6f5526;border-radius:16px;background:linear-gradient(145deg,#171426,#0b0b18);box-shadow:0 8px 24px #d4a94314">
       <h3 style="margin-top:0">📊 Аналитика Mini App <span style="font-size:12px;color:#58e39b">● LIVE</span></h3>
       <p class="section-subtitle">Посещения обновляются при открытии приложения. Онлайн — пользователи, которые были активны в последние 60 секунд.</p>
@@ -104,6 +109,11 @@
       <button class="secondary" onclick="loadAnalytics()">🔄 Обновить статистику</button>
       <div id="analyticsStatus" class="section-subtitle" style="margin-top:8px"></div>
     </div>
+  </section>
+  <section class="profile" id="adminPanel">
+    <h2>🛠 Панель администратора</h2>
+    <p class="section-subtitle">Данные заказов и остатков. Подтверждение оплаты и выдача товара по-прежнему выполняются через защищённые кнопки бота.</p>
+    <button onclick="loadAdminDashboard()">🔄 Обновить данные</button>
     <h3>📣 Объявление для покупателей</h3>
     <p class="section-subtitle">Например: «Ведутся технические работы». После публикации объявление увидят все посетители магазина.</p>
     <label for="announcementTitleInput" style="display:block;margin:10px 0 6px">Заголовок</label>
@@ -229,9 +239,11 @@
       document.getElementById("cartPanel").style.display=tab==="cart"?"block":"none";
       document.getElementById("profilePanel").style.display=tab==="profile"?"block":"none";
       document.getElementById("adminPanel").style.display=tab==="admin"?"block":"none";
+      document.getElementById("analyticsPanel").style.display=tab==="analytics"?"block":"none";
       if(tab==="profile") renderProfile();
       if(tab==="cart") renderCart();
-      if(tab==="admin") { loadAdminDashboard(); loadAnalytics(); }
+      if(tab==="admin") loadAdminDashboard();
+      if(tab==="analytics") loadAnalytics();
       window.scrollTo({top:0,behavior:"smooth"});
     }
 
@@ -387,6 +399,7 @@
         if(!response.ok) return;
         adminDashboardData=await response.json();
         document.getElementById("adminNavButton").style.display="block";
+        document.getElementById("analyticsNavButton").style.display="block";
         renderAdminDashboard();
         await loadBotPosts();
         const announcementResponse=await fetch(API_BASE+"/api/announcement",{cache:"no-store"});
@@ -408,6 +421,7 @@
         if(!response.ok) throw new Error(response.status===403?"Нет доступа к панели администратора.":(data.detail||"Не удалось загрузить данные"));
         adminDashboardData=data;
         document.getElementById("adminNavButton").style.display="block";
+        document.getElementById("analyticsNavButton").style.display="block";
         renderAdminDashboard();
       }catch(e){summary.textContent=e.message||"Ошибка загрузки панели.";}
     }
