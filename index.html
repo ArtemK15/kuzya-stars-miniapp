@@ -37,6 +37,16 @@
     .gift-card button { background:linear-gradient(100deg,#806022,#d4a943); color:#111; }
     .gift-checkout { display:none; margin-top:18px; padding:17px; border:1px solid #a77d2e; border-radius:16px; background:#171522; text-align:center; }
     .gift-checkout .orderline { color:#f2d78f; }
+    .qty-control {display:flex;align-items:center;justify-content:center;gap:18px;margin:12px 0}
+    .qty-control button {width:44px;font-size:20px;background:#29283d}
+    .qty-control strong {min-width:30px;font-size:18px}
+    .cart-panel {margin-top:20px;padding:16px;border:1px solid #a77d2e;border-radius:16px;background:#171522}
+    .cart-row {display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #343044}
+    .cart-row button {width:auto;padding:8px 10px;background:#29283d}
+    .nav {display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 18px}
+    .nav button {background:#242238}
+    .profile {display:none;padding:16px;border:1px solid #6d4bc3;border-radius:16px;background:#151527;margin:16px 0}
+    .profile-order {padding:10px 0;border-bottom:1px solid #343044;font-size:13px;line-height:1.5}
   </style>
 </head>
 <body>
@@ -45,6 +55,23 @@
     <h1>KUZYA STARS SHOP</h1>
     <div class="subtitle">ТВОЙ МИР TELEGRAM STARS</div>
   </header>
+  <nav class="nav">
+    <button onclick="showTab('shop')">🏠 Магазин</button>
+    <button onclick="showTab('cart')">🛒 Корзина <span id="cartCount">0</span></button>
+    <button onclick="showTab('profile')">👤 Кабинет</button>
+  </nav>
+  <section class="profile" id="profilePanel">
+    <h2>👤 Личный кабинет</h2><div id="profileInfo">Загрузка профиля Telegram…</div>
+    <h3>📦 Мои заказы</h3><div id="profileOrders">История заказов будет подключена к серверу следующим этапом.</div>
+  </section>
+  <section class="cart-panel" id="cartPanel" style="display:none">
+    <h2>🛒 Корзина подарков</h2><div id="cartItems">Корзина пока пуста.</div>
+    <div class="orderline" id="cartTotal">Итого: 0 XTR</div>
+    <label for="cartRecipient" style="display:block;text-align:left;margin:12px 0 6px;color:#ddd6ff">Username получателя</label>
+    <input id="cartRecipient" autocomplete="off" placeholder="@username" style="width:100%;padding:13px;border-radius:10px;border:1px solid #6d4bc3;background:#0b0b18;color:#fff;font-size:15px">
+    <button onclick="checkoutCart()">⭐ Оплатить корзину в XTR</button>
+  </section>
+  <div id="shopPanel">
   <h2>⭐ Покупка Telegram Stars</h2>
   <div class="products">
     <div class="product"><div class="star">⭐</div><div class="quantity">13 Stars</div><div class="price">24 ₽</div><button onclick="selectProduct(13, 24)">Выбрать</button></div>
@@ -74,7 +101,7 @@
     <label for="giftRecipient" style="display:block;text-align:left;margin:14px 0 6px;color:#ddd6ff">Username получателя в Telegram</label>
     <input id="giftRecipient" autocomplete="off" placeholder="@username" style="width:100%;padding:13px;border-radius:10px;border:1px solid #6d4bc3;background:#0b0b18;color:#fff;font-size:15px">
     <p style="font-size:12px;color:#aaa;line-height:1.5">Оплата откроется в Telegram Stars (XTR). После успешной оплаты заказ появится у владельца; подарок отправляется вручную.</p>
-    <button id="payGiftButton" onclick="payForGift()">⭐ Оплатить через Telegram Stars</button>
+    <button onclick="addGiftToCart(selectedGift.name,selectedGift.price,selectedGift.stock)">🛒 Добавить в корзину</button><button id="payGiftButton" onclick="payForGift()">⭐ Оплатить через Telegram Stars</button>
     <button class="secondary" onclick="cancelGiftSelection()">❌ Отменить выбор</button>
     <button class="secondary" onclick="backToGifts()">⬅️ К подаркам</button>
   </section>
@@ -83,16 +110,64 @@
     💎 Выбери подходящий пакет Stars.<br>
     Оформление и оплата пока находятся в разработке.
   </div>
-  <div class="footer">KUZYA STARS SHOP · Telegram Mini App</div>
+  </div><div class="footer">KUZYA STARS SHOP · Telegram Mini App</div>
   <script>
     const tg = window.Telegram?.WebApp;
     if (tg) {
       tg.ready();
       tg.expand();
     }
+    window.addEventListener("load",()=>{renderCart();renderProfile();});
     const API_BASE = "https://kuzya-stars-bot.onrender.com";
     let selectedGift = null;
     let invoiceBusy = false;
+    let giftCart = JSON.parse(localStorage.getItem("kuzyaGiftCart") || "[]");
+    function saveCart(){localStorage.setItem("kuzyaGiftCart",JSON.stringify(giftCart));renderCart();}
+    function showTab(tab){
+      document.getElementById("shopPanel").style.display=tab==="shop"?"block":"none";
+      document.getElementById("cartPanel").style.display=tab==="cart"?"block":"none";
+      document.getElementById("profilePanel").style.display=tab==="profile"?"block":"none";
+      if(tab==="profile") renderProfile();
+      if(tab==="cart") renderCart();
+      window.scrollTo({top:0,behavior:"smooth"});
+    }
+    function renderProfile(){
+      const user=tg?.initDataUnsafe?.user;
+      document.getElementById("profileInfo").innerHTML=user
+        ? "<b>"+escapeHtml([user.first_name,user.last_name].filter(Boolean).join(" "))+"</b><br>"+(user.username?"@"+escapeHtml(user.username):"Username не указан")+"<br>ID: "+user.id
+        : "Открой Mini App внутри Telegram, чтобы увидеть профиль.";
+    }
+    function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+    function addGiftToCart(name,price,stock,qty=1){
+      const item=giftCart.find(x=>x.name===name);
+      if(item){if(item.qty+qty>stock){alert("Нет такого количества в наличии.");return;}item.qty+=qty;}
+      else giftCart.push({name,price,stock,qty});
+      saveCart();alert("Добавлено в корзину.");
+    }
+    function changeCartQty(name,delta){
+      const item=giftCart.find(x=>x.name===name);if(!item)return;
+      item.qty+=delta;if(item.qty<=0)giftCart=giftCart.filter(x=>x.name!==name);
+      else if(item.qty>item.stock){item.qty=item.stock;alert("Достигнут остаток магазина.");}
+      saveCart();
+    }
+    function renderCart(){
+      document.getElementById("cartCount").textContent=giftCart.reduce((s,x)=>s+x.qty,0);
+      const el=document.getElementById("cartItems");
+      if(!giftCart.length){el.textContent="Корзина пока пуста.";document.getElementById("cartTotal").textContent="Итого: 0 XTR";return;}
+      el.innerHTML=giftCart.map(x=>'<div class="cart-row"><div><b>'+escapeHtml(x.name)+'</b><br>'+x.price+' XTR × '+x.qty+' = '+(x.price*x.qty)+' XTR</div><div><button onclick="changeCartQty(\''+escapeHtml(x.name)+'\',-1)">−</button> <button onclick="changeCartQty(\''+escapeHtml(x.name)+'\',1)">+</button></div></div>').join("");
+      document.getElementById("cartTotal").textContent="Итого: "+giftCart.reduce((s,x)=>s+x.price*x.qty,0)+" XTR";
+    }
+    async function checkoutCart(){
+      if(giftCart.length!==1){alert("Пока одна оплата оформляется для одного вида подарка. Оформи разные подарки отдельными заказами.");return;}
+      const item=giftCart[0],recipient=document.getElementById("cartRecipient").value.trim();
+      if(!tg?.initData||!tg?.openInvoice){alert("Открой магазин внутри Telegram.");return;}
+      if(!/^@?[A-Za-z0-9_]{5,32}$/.test(recipient)){alert("Введи корректный username получателя.");return;}
+      try{
+        const res=await fetch(API_BASE+"/api/gifts/invoice",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,gift_name:item.name,recipient,quantity:item.qty})});
+        const data=await res.json();if(!res.ok)throw new Error(data.detail||"Не удалось создать счёт");
+        tg.openInvoice(data.invoice_url,status=>{if(status==="paid"){giftCart=giftCart.filter(x=>x.name!==item.name);saveCart();alert("Оплата получена! Заказ №"+data.order_id);}});
+      }catch(e){alert(e.message||"Ошибка оплаты");}
+    }
     function selectGift(name, price, stock) {
       selectedGift = {name, price, stock};
       document.getElementById("giftRecipient").value = "";
@@ -130,7 +205,8 @@
           body: JSON.stringify({
             initData: tg.initData,
             gift_name: selectedGift.name,
-            recipient: recipient
+            recipient: recipient,
+            quantity: 1
           })
         });
         const result = await response.json();
