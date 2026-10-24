@@ -29,6 +29,9 @@
     .price { color: #b9a7ff; font-size: 15px; margin-bottom: 14px; }
     button { width: 100%; border: 0; border-radius: 11px; padding: 12px 8px; background: linear-gradient(100deg, #7548e8, #a15cff); color: white; font-size: 14px; font-weight: bold; cursor: pointer; }
     button:active { opacity: 0.8; }
+    .announcement-banner { margin:0 0 18px; padding:16px; border:1px solid #d4a943; border-radius:14px; background:linear-gradient(135deg,#241b0d,#15121c); color:#fff; box-shadow:0 6px 20px #d4a94316; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; }
+    .announcement-title { color:#f4cc67; font-weight:bold; font-size:16px; margin-bottom:6px; }
+    .announcement-message { color:#f1edf9; font-size:14px; }
     .notice { margin-top: 22px; padding: 15px; background: #151527; border: 1px solid #2d2b4c; border-radius: 14px; color: #b9b7cf; font-size: 13px; line-height: 1.6; text-align: center; }
     .footer { margin-top: 24px; text-align: center; color: #77758f; font-size: 12px; }
     .payment { display:none; margin-top:20px; padding:18px; background:#151527; border:1px solid #6d4bc3; border-radius:18px; text-align:center; }
@@ -69,6 +72,10 @@
   <header class="header">
     <img class="header-banner" src="./kuzya-stars-banner.png" alt="KUZYA STARS SHOP — Telegram Stars 24/7" fetchpriority="high">
   </header>
+  <section id="announcementBanner" class="announcement-banner" style="display:none" aria-live="polite">
+    <div id="announcementTitle" class="announcement-title"></div>
+    <div id="announcementMessage" class="announcement-message"></div>
+  </section>
   <nav class="nav">
     <button onclick="showTab('shop')">🏠 Магазин</button>
     <button onclick="showTab('cart')">🛒 Корзина <span id="cartCount">0</span></button>
@@ -83,6 +90,16 @@
     <h2>🛠 Панель администратора</h2>
     <p class="section-subtitle">Данные заказов и остатков. Подтверждение оплаты и выдача товара по-прежнему выполняются через защищённые кнопки бота.</p>
     <button onclick="loadAdminDashboard()">🔄 Обновить данные</button>
+    <h3>📣 Объявление для покупателей</h3>
+    <p class="section-subtitle">Например: «Ведутся технические работы». После публикации объявление увидят все посетители магазина.</p>
+    <label for="announcementTitleInput" style="display:block;margin:10px 0 6px">Заголовок</label>
+    <input id="announcementTitleInput" maxlength="100" placeholder="⚠️ Ведутся технические работы" style="width:100%;padding:12px;border-radius:10px;background:#0b0b18;color:#fff;border:1px solid #6e5426;margin-bottom:10px">
+    <label for="announcementMessageInput" style="display:block;margin:4px 0 6px">Текст объявления</label>
+    <textarea id="announcementMessageInput" maxlength="2000" rows="4" placeholder="Опиши, что происходит и когда магазин снова будет доступен…" style="width:100%;padding:12px;border-radius:10px;background:#0b0b18;color:#fff;border:1px solid #6e5426;resize:vertical"></textarea>
+    <label style="display:flex;align-items:center;gap:8px;margin:12px 0;color:#ddd6ff"><input id="announcementActiveInput" type="checkbox" checked style="width:auto"> Опубликовать объявление</label>
+    <button onclick="saveAnnouncement()">📢 Сохранить и опубликовать</button>
+    <button class="secondary" onclick="disableAnnouncement()">🗑 Снять объявление</button>
+    <div id="announcementAdminStatus" class="section-subtitle" style="margin-top:10px"></div>
     <div id="adminSummary" style="margin-top:14px">Проверка доступа…</div>
     <h3>📦 Последние заказы</h3>
     <label for="adminStatusFilter" class="section-subtitle">Фильтр по статусу</label>
@@ -190,6 +207,39 @@
       window.scrollTo({top:0,behavior:"smooth"});
     }
     let adminDashboardData = null;
+    async function loadPublicAnnouncement(){
+      const banner=document.getElementById("announcementBanner");
+      try{
+        const response=await fetch(API_BASE+"/api/announcement",{cache:"no-store"});
+        if(!response.ok)return;
+        const data=await response.json();
+        if(data.active && data.message){
+          document.getElementById("announcementTitle").textContent=data.title||"📢 Объявление";
+          document.getElementById("announcementMessage").textContent=data.message;
+          banner.style.display="block";
+        }else banner.style.display="none";
+      }catch(_e){}
+    }
+    async function saveAnnouncement(){
+      const status=document.getElementById("announcementAdminStatus");
+      if(!tg?.initData){status.textContent="Открой Mini App внутри Telegram под аккаунтом администратора.";return;}
+      const title=document.getElementById("announcementTitleInput").value.trim();
+      const message=document.getElementById("announcementMessageInput").value.trim();
+      const active=document.getElementById("announcementActiveInput").checked;
+      if(active&&!message){status.textContent="Добавь текст объявления перед публикацией.";return;}
+      status.textContent="Сохраняю…";
+      try{
+        const response=await fetch(API_BASE+"/api/admin/announcement",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,title,message,active})});
+        const data=await response.json();
+        if(!response.ok)throw new Error(data.detail||"Не удалось сохранить объявление");
+        status.textContent=active?"✅ Объявление опубликовано и видно покупателям.":"Объявление снято с публикации.";
+        await loadPublicAnnouncement();
+      }catch(e){status.textContent="Ошибка: "+(e.message||"не удалось сохранить");}
+    }
+    async function disableAnnouncement(){
+      document.getElementById("announcementActiveInput").checked=false;
+      await saveAnnouncement();
+    }
     async function checkAdminAccess(){
       if(!tg?.initData) return;
       try{
@@ -198,6 +248,13 @@
         adminDashboardData=await response.json();
         document.getElementById("adminNavButton").style.display="block";
         renderAdminDashboard();
+        const announcementResponse=await fetch(API_BASE+"/api/announcement",{cache:"no-store"});
+        if(announcementResponse.ok){
+          const announcement=await announcementResponse.json();
+          document.getElementById("announcementTitleInput").value=announcement.title||"";
+          document.getElementById("announcementMessageInput").value=announcement.message||"";
+          document.getElementById("announcementActiveInput").checked=!!announcement.active;
+        }
       }catch(_e){}
     }
     async function loadAdminDashboard(){
@@ -486,6 +543,7 @@
       document.querySelector(".header").scrollIntoView({behavior:"smooth"});
     }
     checkAdminAccess();
+    loadPublicAnnouncement();
   </script>
 </body>
 </html>
