@@ -127,6 +127,12 @@
       </div>
       <p class="section-subtitle">Воронка считает заказы, созданные после первого посещения, зарегистрированного аналитикой. Конверсия в оплату — оплаченные заказы / все такие заказы.</p>
 
+      <h4>🏆 Самые продаваемые товары</h4>
+      <p class="section-subtitle">Топ-10 по числу оплаченных заказов. Укажи себестоимость одного заказа в соответствующей валюте — тогда рассчитаются валовая прибыль и маржа.</p>
+      <div id="analyticsProductsList" style="display:grid;gap:10px;margin:12px 0">Загрузка рейтинга товаров…</div>
+      <div id="analyticsProductsStatus" class="section-subtitle" style="margin:8px 0"></div>
+
+
       <button class="secondary" onclick="loadAnalytics()">🔄 Обновить статистику</button>
       <div id="analyticsStatus" class="section-subtitle" style="margin-top:8px"></div>
     </div>
@@ -321,9 +327,72 @@
         const setPercent = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = Number(value || 0).toLocaleString("ru-RU", {maximumFractionDigits:1}) + "%"; };
         setPercent("salesVisitorConversion", conversion.visitor_to_order_percent);
         setPercent("salesPaymentConversion", conversion.order_to_payment_percent);
+
+        const products = sales.top_products || [];
+        const productList = document.getElementById("analyticsProductsList");
+        const formatMoney = (value, currency) => Number(value || 0).toLocaleString("ru-RU", {maximumFractionDigits:2}) + (currency === "XTR" ? " XTR" : " ₽");
+        productList.innerHTML = products.length ? products.map((product, index) => {
+          const name = escapeAnalyticsText(product.name);
+          const currency = escapeAnalyticsText(product.currency);
+          const costValue = product.unit_cost == null ? "" : String(product.unit_cost);
+          const profitability = product.cost_configured
+            ? '<div style="margin-top:8px;color:' + (Number(product.profit) >= 0 ? '#58e39b' : '#ff8d8d') + ';font-weight:bold">Валовая прибыль: ' + formatMoney(product.profit, product.currency) + ' · Маржа: ' + Number(product.profit_margin_percent || 0).toLocaleString("ru-RU", {maximumFractionDigits:1}) + '%</div><div style="font-size:11px;color:#c6bddc;margin-top:4px">Себестоимость на все заказы: ' + formatMoney(product.total_cost, product.currency) + '</div>'
+            : '<div style="margin-top:8px;color:#d3b56c">Укажи себестоимость, чтобы рассчитать прибыль.</div>';
+          return '<div data-product="' + name + '" data-currency="' + currency + '" style="padding:13px;border:1px solid #4a3b25;border-radius:13px;background:#171426">' +
+            '<div style="display:flex;align-items:flex-start;gap:10px;justify-content:space-between"><div style="font-weight:bold;color:#f7d47a">' + (index + 1) + '. ' + name + '</div><span style="font-size:11px;color:#d8c48a;border:1px solid #6f5526;border-radius:8px;padding:3px 6px">' + currency + '</span></div>' +
+            '<div style="font-size:12px;color:#c6bddc;margin-top:7px">Оплаченных заказов: ' + Number(product.paid_orders || 0).toLocaleString("ru-RU") + ' · Средний чек: ' + formatMoney(product.average_order_revenue, product.currency) + '</div>' +
+            '<div style="margin-top:5px;color:#f5e9cc">Выручка: <b>' + formatMoney(product.revenue, product.currency) + '</b></div>' + profitability +
+            '<label style="display:block;font-size:12px;color:#c6bddc;margin-top:12px">Себестоимость одного оплаченного заказа (' + currency + ')</label>' +
+            '<div style="display:flex;gap:8px;align-items:center;margin-top:6px"><input class="analytics-cost-input" type="number" min="0" max="100000000" step="0.01" value="' + escapeAnalyticsText(costValue) + '" placeholder="Введи стоимость" style="flex:1;min-width:0;padding:10px;border-radius:9px;background:#0b0b18;color:#fff;border:1px solid #6e5426"><button type="button" class="secondary" onclick="saveAnalyticsProductCost(this)" style="width:auto;white-space:nowrap;padding:10px">Сохранить</button></div>' +
+            '</div>';
+        }).join("") : '<div style="padding:12px;border-radius:12px;background:#211d30;color:#c6bddc">Пока нет оплаченных продаж для рейтинга товаров.</div>';
         status.textContent = "Обновлено: " + new Date(data.updated_at).toLocaleTimeString("ru-RU");
       } catch (e) {
         status.textContent = "Аналитика пока недоступна: " + (e.message || "ошибка соединения");
+      }
+    }
+
+    async function saveAnalyticsProductCost(button) {
+      const card = button.closest("[data-product][data-currency]");
+      const input = card?.querySelector(".analytics-cost-input");
+      const message = document.getElementById("analyticsProductsStatus");
+      if (!card || !input || !tg?.initData) {
+        if (message) message.textContent = "Открой Mini App внутри Telegram.";
+        return;
+      }
+      const raw = input.value.trim();
+      const unitCost = Number(raw);
+      if (raw === "" || !Number.isFinite(unitCost) || unitCost < 0 || unitCost > 100000000) {
+        if (message) message.textContent = "Введи себестоимость от 0 до 100 000 000.";
+        return;
+      }
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = "Сохраняю…";
+      if (message) message.textContent = "";
+      try {
+        const response = await fetch(ANALYTICS_API_BASE + "/api/admin/analytics/product-cost", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({
+            initData: tg.initData,
+            product_name: card.dataset.product,
+            currency: card.dataset.currency,
+            unit_cost: unitCost
+          }),
+          cache: "no-store"
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || "Не удалось сохранить себестоимость");
+        if (message) message.textContent = "Себестоимость сохранена. Пересчитываю прибыль…";
+        await loadAnalytics();
+        const updatedMessage = document.getElementById("analyticsProductsStatus");
+        if (updatedMessage) updatedMessage.textContent = "Себестоимость сохранена.";
+      } catch (error) {
+        if (message) message.textContent = "Ошибка: " + (error.message || "не удалось сохранить");
+      } finally {
+        button.disabled = false;
+        button.textContent = originalText;
       }
     }
 
