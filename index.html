@@ -97,6 +97,14 @@
     <div style="display:flex;align-items:center;gap:8px;margin:12px 0 16px;color:#58e39b;font-size:12px;font-weight:bold"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#58e39b;box-shadow:0 0 10px #58e39b"></span> LIVE · Обновление при открытии панели</div>
     <div class="analytics-card" style="margin:16px 0;padding:16px;border:1px solid #6f5526;border-radius:16px;background:linear-gradient(145deg,#171426,#0b0b18);box-shadow:0 8px 24px #d4a94314">
       <h3 style="margin-top:0">📊 Аналитика Mini App <span style="font-size:12px;color:#58e39b">● LIVE</span></h3>
+      <label for="analyticsPeriodSelect" style="display:block;margin:14px 0 6px;color:#c6bddc;font-size:13px">Период финансовой аналитики</label>
+      <select id="analyticsPeriodSelect" onchange="changeAnalyticsPeriod(this.value)" style="width:100%;padding:12px;border-radius:10px;background:#0b0b18;color:#fff;border:1px solid #6e5426">
+        <option value="today">Сегодня</option>
+        <option value="7d">Последние 7 дней</option>
+        <option value="30d">Последние 30 дней</option>
+        <option value="all" selected>Всё время</option>
+      </select>
+      <div id="financePeriodLabel" class="section-subtitle" style="margin-top:8px">Финансовые показатели: всё время</div>
       <p class="section-subtitle">Посещения обновляются при открытии приложения. Онлайн — пользователи, которые были активны в последние 60 секунд.</p>
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
         <div style="padding:12px;border-radius:12px;background:#211d30"><div style="font-size:12px;color:#c6bddc">🟢 Сейчас онлайн</div><strong id="analyticsActive" style="font-size:26px;color:#f7d47a">—</strong></div>
@@ -117,6 +125,14 @@
         <div style="padding:12px;border-radius:12px;background:#211d30;grid-column:1/-1"><div style="font-size:12px;color:#c6bddc">⭐ Выручка Telegram Stars (XTR)</div><strong id="salesRevenueXtr" style="font-size:24px;color:#f7d47a">—</strong></div>
       </div>
       <p class="section-subtitle">Выручка учитывает заказы, которые отмечены как оплаченные и не отменены. RUB и XTR показываются отдельно.</p>
+      <h4>📉 Сравнение с предыдущим периодом</h4>
+      <div id="financeComparison" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0">
+        <div style="padding:12px;border-radius:12px;background:#211d30;color:#c6bddc;grid-column:1/-1">Загрузка сравнения…</div>
+      </div>
+      <h4>📈 Динамика выручки и прибыли</h4>
+      <p class="section-subtitle">Для «Всё время» график показывает последние 30 дней. Для «Сегодня» данные сгруппированы по часам. Выручка и прибыль показаны отдельно для RUB и XTR.</p>
+      <div id="financeProfitSummary" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0"></div>
+      <div id="financeTrend" style="display:grid;gap:12px;margin:12px 0">Загрузка динамики…</div>
       <h4>🔄 Конверсия в покупки</h4>
       <div id="analyticsConversion" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0">
         <div style="padding:12px;border-radius:12px;background:#211d30"><div style="font-size:12px;color:#c6bddc">🛍 Посетители с заказом</div><strong id="salesVisitorsWithOrders" style="font-size:24px;color:#f7d47a">—</strong></div>
@@ -290,7 +306,14 @@
       } catch (_) {}
     }
 
-    async function loadAnalytics() {
+    function changeAnalyticsPeriod(period) {
+      loadAnalytics(period);
+    }
+
+    async function loadAnalytics(selectedPeriod) {
+      const periodSelect = document.getElementById("analyticsPeriodSelect");
+      const period = selectedPeriod || periodSelect?.value || "all";
+      if (periodSelect && periodSelect.value !== period) periodSelect.value = period;
       const status = document.getElementById("analyticsStatus");
       status.textContent = "Обновляю…";
       if (!tg?.initData) { status.textContent = "Открой Mini App внутри Telegram."; return; }
@@ -298,7 +321,7 @@
         const response = await fetch(ANALYTICS_API_BASE + "/api/admin/analytics", {
           method: "POST",
           headers: {"Content-Type":"application/json"},
-          body: JSON.stringify({initData: tg.initData}),
+          body: JSON.stringify({initData: tg.initData, period}),
           cache: "no-store"
         });
         const data = await response.json();
@@ -327,6 +350,58 @@
         const setPercent = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = Number(value || 0).toLocaleString("ru-RU", {maximumFractionDigits:1}) + "%"; };
         setPercent("salesVisitorConversion", conversion.visitor_to_order_percent);
         setPercent("salesPaymentConversion", conversion.order_to_payment_percent);
+
+        document.getElementById("financePeriodLabel").textContent = "Финансовые показатели: " + (data.period?.label || period);
+        const comparison = data.comparison;
+        const compareBox = document.getElementById("financeComparison");
+        const formatChange = value => {
+          const n = Number(value || 0);
+          const color = n > 0 ? "#58e39b" : n < 0 ? "#ff8d8d" : "#c6bddc";
+          const sign = n > 0 ? "+" : "";
+          return '<strong style="color:' + color + '">' + sign + n.toLocaleString("ru-RU", {maximumFractionDigits:1}) + '%</strong>';
+        };
+        const compareCard = (label, value) => '<div style="padding:12px;border-radius:12px;background:#211d30"><div style="font-size:12px;color:#c6bddc;margin-bottom:6px">' + label + '</div>' + formatChange(value) + '</div>';
+        if (comparison) {
+          compareBox.innerHTML = compareCard("🧾 Все заказы", comparison.orders_change_percent) +
+            compareCard("✅ Оплаченные заказы", comparison.paid_orders_change_percent) +
+            compareCard("💵 Выручка RUB", comparison.revenue_rub_change_percent) +
+            compareCard("⭐ Выручка XTR", comparison.revenue_xtr_change_percent) +
+            (comparison.profit_rub_change_percent == null ? "" : compareCard("📈 Прибыль RUB", comparison.profit_rub_change_percent)) +
+            (comparison.profit_xtr_change_percent == null ? "" : compareCard("📈 Прибыль XTR", comparison.profit_xtr_change_percent));
+        } else {
+          compareBox.innerHTML = '<div style="padding:12px;border-radius:12px;background:#211d30;color:#c6bddc;grid-column:1/-1">Для режима «Всё время» нет одного предыдущего равного периода для сравнения.</div>';
+        }
+
+        const profits = data.profit_summary || {};
+        const profitCard = (currency, label) => {
+          const item = profits[currency] || {};
+          const complete = item.complete && item.profit != null;
+          const value = complete ? Number(item.profit).toLocaleString("ru-RU", {maximumFractionDigits:2}) + (currency === "XTR" ? " XTR" : " ₽") : "Укажи все себестоимости";
+          return '<div style="padding:12px;border-radius:12px;background:#211d30"><div style="font-size:12px;color:#c6bddc;margin-bottom:6px">' + label + '</div><strong style="font-size:16px;color:' + (complete ? "#58e39b" : "#d3b56c") + '">' + value + '</strong></div>';
+        };
+        document.getElementById("financeProfitSummary").innerHTML = profitCard("RUB", "Валовая прибыль RUB") + profitCard("XTR", "Валовая прибыль XTR");
+
+        const financeRows = data.finance_series || [];
+        const trend = document.getElementById("financeTrend");
+        const renderCurrencyTrend = (currency, title, revenueKey, profitKey) => {
+          const values = financeRows.map(row => Number(row[revenueKey] || 0));
+          const maxValue = Math.max(1, ...values);
+          const hasProfit = financeRows.some(row => row[profitKey] != null);
+          return '<div style="padding:12px;border:1px solid #4a3b25;border-radius:13px;background:#171426">' +
+            '<div style="font-weight:bold;color:#f7d47a;margin-bottom:10px">' + title + '</div>' +
+            (financeRows.length ? financeRows.map(row => {
+              const revenue = Number(row[revenueKey] || 0);
+              const profit = row[profitKey] == null ? null : Number(row[profitKey]);
+              const width = Math.max(0, Math.min(100, revenue / maxValue * 100));
+              const label = escapeAnalyticsText(row.label);
+              return '<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#c6bddc"><span>' + label + '</span><span>' + revenue.toLocaleString("ru-RU") + (currency === "XTR" ? " XTR" : " ₽") + (profit == null ? "" : " · прибыль " + profit.toLocaleString("ru-RU", {maximumFractionDigits:2})) + '</span></div>' +
+                '<div style="height:7px;background:#30283e;border-radius:6px;overflow:hidden;margin-top:4px"><div style="height:100%;width:' + width + '%;background:linear-gradient(90deg,#725A2A,#E6C16A);border-radius:6px"></div></div></div>';
+            }).join("") : '<div style="color:#c6bddc">Пока нет продаж за выбранный период.</div>') +
+            (hasProfit ? '<div style="font-size:11px;color:#c6bddc;margin-top:8px">Рядом с выручкой указана прибыль (когда себестоимость задана).</div>' : '<div style="font-size:11px;color:#d3b56c;margin-top:8px">Для прибыли за период нужно заполнить себестоимость всех проданных товаров.</div>') +
+            '</div>';
+        };
+        trend.innerHTML = renderCurrencyTrend("RUB", "Рубли (RUB)", "revenue_rub", "profit_rub") +
+          renderCurrencyTrend("XTR", "Telegram Stars (XTR)", "revenue_xtr", "profit_xtr");
 
         const products = sales.top_products || [];
         const productList = document.getElementById("analyticsProductsList");
