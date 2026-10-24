@@ -236,18 +236,7 @@
     }
 
     let analyticsHeartbeatTimer = null;
-    const analyticsSessionId = (() => {
-      try {
-        let id = sessionStorage.getItem("kuzyaAnalyticsSession");
-        if (!id) {
-          id = (window.crypto?.randomUUID ? crypto.randomUUID() : "s" + Date.now() + Math.random().toString(36).slice(2));
-          sessionStorage.setItem("kuzyaAnalyticsSession", id);
-        }
-        return id;
-      } catch (_) {
-        return "s" + Date.now() + Math.random().toString(36).slice(2);
-      }
-    })();
+    const analyticsSessionId = (window.crypto?.randomUUID ? crypto.randomUUID() : "s" + Date.now() + Math.random().toString(36).slice(2));
 
     async function sendAnalyticsHeartbeat() {
       if (!tg?.initData) return;
