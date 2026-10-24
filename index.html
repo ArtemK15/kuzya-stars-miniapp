@@ -34,6 +34,25 @@
     .announcement-message { color:#f1edf9; font-size:14px; }
     .notice { margin-top: 22px; padding: 15px; background: #151527; border: 1px solid #2d2b4c; border-radius: 14px; color: #b9b7cf; font-size: 13px; line-height: 1.6; text-align: center; }
     .footer { margin-top: 24px; text-align: center; color: #77758f; font-size: 12px; }
+
+    .contacts-section { margin: 28px 0 0; padding: 18px; border: 1px solid #6f5526; border-radius: 20px; background: radial-gradient(ellipse at top right, #29200f 0%, #171421 48%, #10101b 100%); box-shadow: 0 10px 30px #d4a94312; }
+    .contacts-heading { display:flex; align-items:center; gap:12px; margin:0 0 7px; }
+    .contacts-heading-icon { display:grid; place-items:center; flex:0 0 44px; height:44px; border:1px solid #8d6b2c; border-radius:14px; background:linear-gradient(145deg,#332610,#1c1820); font-size:22px; }
+    .contacts-heading h2 { margin:0; color:#f4cc67; font-size:19px; }
+    .contacts-caption { margin:0 0 16px; color:#aaa6c5; font-size:12px; line-height:1.55; }
+    .contacts-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    .contact-link { display:flex; align-items:center; gap:10px; min-width:0; padding:12px 10px; border:1px solid #343044; border-radius:14px; background:linear-gradient(145deg,#211d30,#151421); color:#fff; text-decoration:none; transition:transform .18s ease,border-color .18s ease,background .18s ease; }
+    .contact-link:hover { transform:translateY(-2px); border-color:#8c6a2d; background:linear-gradient(145deg,#29213a,#1b1825); }
+    .contact-icon { display:grid; place-items:center; flex:0 0 36px; height:36px; border-radius:11px; background:#30283f; font-size:18px; font-weight:800; }
+    .contact-copy { min-width:0; flex:1; }
+    .contact-name { display:block; font-size:13px; font-weight:700; line-height:1.35; }
+    .contact-handle { display:block; margin-top:3px; color:#a9a3bf; font-size:10px; line-height:1.35; overflow-wrap:anywhere; }
+    .contact-arrow { color:#f4cc67; font-size:20px; flex:0 0 auto; }
+    .contact-link.support-link { grid-column:1/-1; border-color:#8d6b2c; background:linear-gradient(110deg,#35260f,#211b2d); }
+    .contact-link.support-link .contact-icon { background:linear-gradient(145deg,#8a6828,#d4a943); color:#17121a; }
+    .contacts-note { margin:13px 0 0; color:#77758f; font-size:11px; text-align:center; line-height:1.5; }
+    @media (max-width:380px) { .contacts-section { padding:14px; } .contacts-grid { grid-template-columns:1fr; } .contact-link.support-link { grid-column:auto; } }
+
     .payment { display:none; margin-top:20px; padding:18px; background:#151527; border:1px solid #6d4bc3; border-radius:18px; text-align:center; }
     .payment img { display:block; width:min(100%,300px); margin:16px auto; background:#fff; border-radius:8px; }
     .orderline { margin:10px 0; color:#ddd6ff; }
@@ -264,7 +283,51 @@
     💎 Выбери подходящий пакет Stars.<br>
     Оформление и оплата пока находятся в разработке.
   </div>
-  </div><div class="footer">KUZYA STARS SHOP · Telegram Mini App</div>
+  </div>
+  <section class="contacts-section" id="contactsSection" aria-labelledby="contactsTitle">
+    <div class="contacts-heading">
+      <div class="contacts-heading-icon" aria-hidden="true">✦</div>
+      <div>
+        <h2 id="contactsTitle">Мы на связи</h2>
+        <p style="margin:4px 0 0;color:#c6bddc;font-size:12px">KUZYA STARS SHOP · официальные контакты</p>
+      </div>
+    </div>
+    <p class="contacts-caption">Подписывайся на наши соцсети или напиши нам — будем рады помочь ✨</p>
+    <div class="contacts-grid">
+      <a class="contact-link" href="https://t.me/saskofff" target="_blank" rel="noopener noreferrer" aria-label="Открыть Telegram">
+        <span class="contact-icon" aria-hidden="true">✈️</span>
+        <span class="contact-copy"><span class="contact-name">Telegram</span><span class="contact-handle">@saskofff</span></span>
+        <span class="contact-arrow" aria-hidden="true">›</span>
+      </a>
+      <a class="contact-link" href="https://www.instagram.com/tema.kuzm" target="_blank" rel="noopener noreferrer" aria-label="Открыть Instagram">
+        <span class="contact-icon" aria-hidden="true">📸</span>
+        <span class="contact-copy"><span class="contact-name">Instagram</span><span class="contact-handle">@tema.kuzm</span></span>
+        <span class="contact-arrow" aria-hidden="true">›</span>
+      </a>
+      <a class="contact-link" href="https://www.tiktok.com/@kuzya22rus" target="_blank" rel="noopener noreferrer" aria-label="Открыть TikTok">
+        <span class="contact-icon" aria-hidden="true">♪</span>
+        <span class="contact-copy"><span class="contact-name">TikTok</span><span class="contact-handle">@kuzya22rus</span></span>
+        <span class="contact-arrow" aria-hidden="true">›</span>
+      </a>
+      <a class="contact-link" href="https://vk.ru/artem.kuzm" target="_blank" rel="noopener noreferrer" aria-label="Открыть ВКонтакте">
+        <span class="contact-icon" aria-hidden="true" style="font-size:13px;background:#244b91">VK</span>
+        <span class="contact-copy"><span class="contact-name">ВКонтакте</span><span class="contact-handle">artem.kuzm</span></span>
+        <span class="contact-arrow" aria-hidden="true">›</span>
+      </a>
+      <a class="contact-link" href="https://t.me/kuzgram" target="_blank" rel="noopener noreferrer" aria-label="Открыть другие соцсети в Telegram">
+        <span class="contact-icon" aria-hidden="true">💫</span>
+        <span class="contact-copy"><span class="contact-name">Другие соцсети</span><span class="contact-handle">Kuzgram</span></span>
+        <span class="contact-arrow" aria-hidden="true">›</span>
+      </a>
+      <a class="contact-link support-link" href="https://t.me/KuzyaShopUC_bot" target="_blank" rel="noopener noreferrer" aria-label="Открыть отдельную ссылку поддержки">
+        <span class="contact-icon" aria-hidden="true">🎧</span>
+        <span class="contact-copy"><span class="contact-name">Поддержка магазина</span><span class="contact-handle">Написать через Telegram-бота</span></span>
+        <span class="contact-arrow" aria-hidden="true">›</span>
+      </a>
+    </div>
+    <p class="contacts-note">Переход по кнопке откроет выбранную соцсеть или поддержку.</p>
+  </section>
+  <div class="footer">KUZYA STARS SHOP · Telegram Mini App</div>
   <script>
     const tg = window.Telegram?.WebApp;
     if (tg) {
