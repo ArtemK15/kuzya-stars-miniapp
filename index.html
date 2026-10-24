@@ -393,9 +393,11 @@
               const revenue = Number(row[revenueKey] || 0);
               const profit = row[profitKey] == null ? null : Number(row[profitKey]);
               const width = Math.max(0, Math.min(100, revenue / maxValue * 100));
+              const profitWidth = profit == null ? 0 : Math.max(0, Math.min(100, Math.max(0, profit) / maxValue * 100));
               const label = escapeAnalyticsText(row.label);
               return '<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#c6bddc"><span>' + label + '</span><span>' + revenue.toLocaleString("ru-RU") + (currency === "XTR" ? " XTR" : " ₽") + (profit == null ? "" : " · прибыль " + profit.toLocaleString("ru-RU", {maximumFractionDigits:2})) + '</span></div>' +
-                '<div style="height:7px;background:#30283e;border-radius:6px;overflow:hidden;margin-top:4px"><div style="height:100%;width:' + width + '%;background:linear-gradient(90deg,#725A2A,#E6C16A);border-radius:6px"></div></div></div>';
+                '<div style="height:7px;background:#30283e;border-radius:6px;overflow:hidden;margin-top:4px"><div style="height:100%;width:' + width + '%;background:linear-gradient(90deg,#725A2A,#E6C16A);border-radius:6px"></div></div>' +
+                (profit == null ? "" : '<div style="height:4px;background:#30283e;border-radius:6px;overflow:hidden;margin-top:3px"><div style="height:100%;width:' + profitWidth + '%;background:#58e39b;border-radius:6px"></div></div>') + '</div>';
             }).join("") : '<div style="color:#c6bddc">Пока нет продаж за выбранный период.</div>') +
             (hasProfit ? '<div style="font-size:11px;color:#c6bddc;margin-top:8px">Рядом с выручкой указана прибыль (когда себестоимость задана).</div>' : '<div style="font-size:11px;color:#d3b56c;margin-top:8px">Для прибыли за период нужно заполнить себестоимость всех проданных товаров.</div>') +
             '</div>';
