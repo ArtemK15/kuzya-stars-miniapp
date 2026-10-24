@@ -230,6 +230,7 @@
     }
     window.addEventListener("load",()=>{renderCart();renderProfile();});
     const API_BASE = "https://kuzya-stars-bot.onrender.com";
+    const ANALYTICS_API_BASE = "https://kuzya-stars-render-test.onrender.com";
     let selectedGift = null;
     let invoiceBusy = false;
     let giftCart = JSON.parse(localStorage.getItem("kuzyaGiftCart") || "[]");
@@ -253,7 +254,7 @@
     async function sendAnalyticsHeartbeat() {
       if (!tg?.initData) return;
       try {
-        await fetch(API_BASE + "/api/analytics/heartbeat", {
+        await fetch(ANALYTICS_API_BASE + "/api/analytics/heartbeat", {
           method: "POST",
           headers: {"Content-Type":"application/json"},
           body: JSON.stringify({initData: tg.initData, sessionId: analyticsSessionId}),
@@ -267,7 +268,7 @@
       status.textContent = "Обновляю…";
       if (!tg?.initData) { status.textContent = "Открой Mini App внутри Telegram."; return; }
       try {
-        const response = await fetch(API_BASE + "/api/admin/analytics", {
+        const response = await fetch(ANALYTICS_API_BASE + "/api/admin/analytics", {
           method: "POST",
           headers: {"Content-Type":"application/json"},
           body: JSON.stringify({initData: tg.initData}),
