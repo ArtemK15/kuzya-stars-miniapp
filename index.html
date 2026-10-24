@@ -10,10 +10,8 @@
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; padding: 22px 16px 35px; background: #0b0b18; color: #ffffff; font-family: Arial, sans-serif; }
-    .header { text-align: center; padding: 20px 10px 26px; background: linear-gradient(145deg, #20134a, #111126); border: 1px solid #39256e; border-radius: 22px; margin-bottom: 25px; }
-    .logo { font-size: 42px; margin-bottom: 8px; }
-    h1 { margin: 0; font-size: 25px; letter-spacing: 1px; }
-    .subtitle { color: #b9a7ff; font-size: 13px; margin-top: 9px; }
+    .header { margin: 0 0 22px; padding: 0; border: 1px solid #6f5526; border-radius: 18px; overflow: hidden; background: #09080b; box-shadow: 0 8px 28px #d4a94318; line-height: 0; }
+    .header-banner { display: block; width: 100%; height: auto; object-fit: contain; }
     h2 { font-size: 19px; margin: 25px 0 14px; }
     .products { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
     .product { background: #151527; border: 1px solid #2d2b4c; border-radius: 17px; padding: 18px 10px; text-align: center; }
@@ -60,9 +58,7 @@
 </head>
 <body>
   <header class="header">
-    <div class="logo">⭐</div>
-    <h1>KUZYA STARS SHOP</h1>
-    <div class="subtitle">ТВОЙ МИР TELEGRAM STARS</div>
+    <img class="header-banner" src="./kuzya-stars-banner.png" alt="KUZYA STARS SHOP — Telegram Stars 24/7" fetchpriority="high">
   </header>
   <nav class="nav">
     <button onclick="showTab('shop')">🏠 Магазин</button>
