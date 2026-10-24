@@ -176,7 +176,7 @@
         if(!response.ok)throw new Error(data.detail||"Не удалось загрузить заказы");
         if(!data.orders?.length){ordersEl.textContent="Заказов пока нет.";return;}
         ordersEl.innerHTML=data.orders.map(o=>{
-          const item=o.gift_name?("🎁 "+escapeHtml(o.gift_name)+" × "+o.quantity):("⭐ "+o.stars+" Stars");
+          const item=o.gift_name?(o.gift_name.startsWith("Telegram Premium")?("💎 "+escapeHtml(o.gift_name)):("🎁 "+escapeHtml(o.gift_name)+" × "+o.quantity)):("⭐ "+o.stars+" Stars");
           const when=o.created_at?new Date(o.created_at+"Z").toLocaleString():"";
           return '<div class="cart-row"><div><b>Заказ #'+o.id+'</b><br>'+item+'<br>Получатель: @'+escapeHtml(o.recipient)+'<br>'+o.price+' '+o.currency+' · '+escapeHtml(o.status)+'<br><small>'+escapeHtml(when)+'</small></div></div>';
         }).join("");
