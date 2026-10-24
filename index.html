@@ -117,6 +117,16 @@
         <div style="padding:12px;border-radius:12px;background:#211d30;grid-column:1/-1"><div style="font-size:12px;color:#c6bddc">⭐ Выручка Telegram Stars (XTR)</div><strong id="salesRevenueXtr" style="font-size:24px;color:#f7d47a">—</strong></div>
       </div>
       <p class="section-subtitle">Выручка учитывает заказы, которые отмечены как оплаченные и не отменены. RUB и XTR показываются отдельно.</p>
+      <h4>🔄 Конверсия в покупки</h4>
+      <div id="analyticsConversion" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0">
+        <div style="padding:12px;border-radius:12px;background:#211d30"><div style="font-size:12px;color:#c6bddc">🛍 Посетители с заказом</div><strong id="salesVisitorsWithOrders" style="font-size:24px;color:#f7d47a">—</strong></div>
+        <div style="padding:12px;border-radius:12px;background:#211d30"><div style="font-size:12px;color:#c6bddc">📈 Конверсия посетитель → заказ</div><strong id="salesVisitorConversion" style="font-size:24px;color:#f7d47a">—</strong></div>
+        <div style="padding:12px;border-radius:12px;background:#211d30"><div style="font-size:12px;color:#c6bddc">🧾 Заказы после первого визита</div><strong id="salesAttributedOrders" style="font-size:24px;color:#f7d47a">—</strong></div>
+        <div style="padding:12px;border-radius:12px;background:#211d30"><div style="font-size:12px;color:#c6bddc">💳 Из них оплачено</div><strong id="salesAttributedPaidOrders" style="font-size:24px;color:#f7d47a">—</strong></div>
+        <div style="padding:12px;border-radius:12px;background:#211d30;grid-column:1/-1"><div style="font-size:12px;color:#c6bddc">✅ Конверсия заказ → оплата</div><strong id="salesPaymentConversion" style="font-size:24px;color:#f7d47a">—</strong></div>
+      </div>
+      <p class="section-subtitle">Воронка считает заказы, созданные после первого посещения, зарегистрированного аналитикой. Конверсия в оплату — оплаченные заказы / все такие заказы.</p>
+
       <button class="secondary" onclick="loadAnalytics()">🔄 Обновить статистику</button>
       <div id="analyticsStatus" class="section-subtitle" style="margin-top:8px"></div>
     </div>
@@ -304,6 +314,13 @@
         setMetric("salesPaidOrders", sales.paid_orders);
         setMetric("salesRevenueRub", sales.revenue_rub);
         setMetric("salesRevenueXtr", sales.revenue_xtr);
+        const conversion = sales.conversion || {};
+        setMetric("salesVisitorsWithOrders", conversion.visitors_with_orders);
+        setMetric("salesAttributedOrders", conversion.attributed_orders);
+        setMetric("salesAttributedPaidOrders", conversion.attributed_paid_orders);
+        const setPercent = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = Number(value || 0).toLocaleString("ru-RU", {maximumFractionDigits:1}) + "%"; };
+        setPercent("salesVisitorConversion", conversion.visitor_to_order_percent);
+        setPercent("salesPaymentConversion", conversion.order_to_payment_percent);
         status.textContent = "Обновлено: " + new Date(data.updated_at).toLocaleTimeString("ru-RU");
       } catch (e) {
         status.textContent = "Аналитика пока недоступна: " + (e.message || "ошибка соединения");
