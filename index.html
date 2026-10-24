@@ -73,10 +73,30 @@
     <button onclick="showTab('shop')">🏠 Магазин</button>
     <button onclick="showTab('cart')">🛒 Корзина <span id="cartCount">0</span></button>
     <button onclick="showTab('profile')">👤 Кабинет</button>
+    <button id="adminNavButton" onclick="showTab('admin')" style="display:none">🛠 Админ</button>
   </nav>
   <section class="profile" id="profilePanel">
     <h2>👤 Личный кабинет</h2><div id="profileInfo">Загрузка профиля Telegram…</div>
     <h3>📦 Мои заказы</h3><div id="profileOrders">Открываю историю заказов…</div>
+  </section>
+  <section class="profile" id="adminPanel">
+    <h2>🛠 Панель администратора</h2>
+    <p class="section-subtitle">Данные заказов и остатков. Подтверждение оплаты и выдача товара по-прежнему выполняются через защищённые кнопки бота.</p>
+    <button onclick="loadAdminDashboard()">🔄 Обновить данные</button>
+    <div id="adminSummary" style="margin-top:14px">Проверка доступа…</div>
+    <h3>📦 Последние заказы</h3>
+    <label for="adminStatusFilter" class="section-subtitle">Фильтр по статусу</label>
+    <select id="adminStatusFilter" onchange="renderAdminOrders()" style="width:100%;padding:12px;border-radius:10px;background:#151527;color:#fff;border:1px solid #6e5426;margin:8px 0 12px">
+      <option value="">Все статусы</option>
+      <option>Ожидает оплаты</option>
+      <option>Оплачен — ожидает выдачи</option>
+      <option>Выполнен — выдача подтверждена вручную</option>
+      <option>Отменён</option>
+    </select>
+    <div id="adminOrders">Загрузка…</div>
+    <h3>🎁 Остатки подарков</h3>
+    <div id="adminStock">Загрузка…</div>
+    <p id="adminLimitNote" class="section-subtitle"></p>
   </section>
   <section class="cart-panel" id="cartPanel" style="display:none">
     <h2>🛒 Корзина подарков</h2><div id="cartItems">Корзина пока пуста.</div>
@@ -163,9 +183,63 @@
       document.getElementById("shopPanel").style.display=tab==="shop"?"block":"none";
       document.getElementById("cartPanel").style.display=tab==="cart"?"block":"none";
       document.getElementById("profilePanel").style.display=tab==="profile"?"block":"none";
+      document.getElementById("adminPanel").style.display=tab==="admin"?"block":"none";
       if(tab==="profile") renderProfile();
       if(tab==="cart") renderCart();
+      if(tab==="admin") loadAdminDashboard();
       window.scrollTo({top:0,behavior:"smooth"});
+    }
+    let adminDashboardData = null;
+    async function checkAdminAccess(){
+      if(!tg?.initData) return;
+      try{
+        const response=await fetch(API_BASE+"/api/admin/dashboard",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData})});
+        if(!response.ok) return;
+        adminDashboardData=await response.json();
+        document.getElementById("adminNavButton").style.display="block";
+        renderAdminDashboard();
+      }catch(_e){}
+    }
+    async function loadAdminDashboard(){
+      const summary=document.getElementById("adminSummary");
+      summary.textContent="Загружаю данные…";
+      if(!tg?.initData){summary.textContent="Открой Mini App внутри Telegram под аккаунтом администратора.";return;}
+      try{
+        const response=await fetch(API_BASE+"/api/admin/dashboard",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData})});
+        const data=await response.json();
+        if(!response.ok) throw new Error(response.status===403?"Нет доступа к панели администратора.":(data.detail||"Не удалось загрузить данные"));
+        adminDashboardData=data;
+        document.getElementById("adminNavButton").style.display="block";
+        renderAdminDashboard();
+      }catch(e){summary.textContent=e.message||"Ошибка загрузки панели.";}
+    }
+    function renderAdminDashboard(){
+      if(!adminDashboardData)return;
+      const s=adminDashboardData.summary||{};
+      document.getElementById("adminSummary").innerHTML=
+        '<div class="cart-row"><div>🧾 Заказов в списке</div><b>'+s.orders_loaded+'</b></div>'+
+        '<div class="cart-row"><div>🕒 Ожидают оплаты</div><b>'+s.pending+'</b></div>'+
+        '<div class="cart-row"><div>⚙️ Ожидают выдачи</div><b>'+s.processing+'</b></div>'+
+        '<div class="cart-row"><div>✅ Выполнено</div><b>'+s.completed+'</b></div>'+
+        '<div class="cart-row"><div>❌ Отменено</div><b>'+s.cancelled+'</b></div>'+
+        '<div class="cart-row"><div>Оборот RUB* (по загруженным заказам)</div><b>'+Number(s.rub_revenue||0).toLocaleString("ru-RU")+' ₽</b></div>'+
+        '<div class="cart-row"><div>Оборот XTR* (по загруженным заказам)</div><b>'+Number(s.xtr_revenue||0).toLocaleString("ru-RU")+' XTR</b></div>';
+      document.getElementById("adminLimitNote").textContent=s.is_limited_to_latest_50?"Показаны последние 50 заказов; оборот рассчитан только по этому списку.":"Показаны все заказы, доступные в списке.";
+      renderAdminOrders();
+      const stock=adminDashboardData.stock||[];
+      document.getElementById("adminStock").innerHTML=stock.length?stock.map(x=>'<div class="cart-row"><span>🎁 '+escapeHtml(x.name)+'</span><b>'+x.quantity+' шт.</b></div>').join(""):"Остатки не найдены.";
+    }
+    function renderAdminOrders(){
+      if(!adminDashboardData)return;
+      const filter=document.getElementById("adminStatusFilter").value;
+      const orders=(adminDashboardData.orders||[]).filter(o=>!filter||o.status===filter);
+      const el=document.getElementById("adminOrders");
+      if(!orders.length){el.textContent="Заказов с таким статусом нет.";return;}
+      el.innerHTML=orders.map(o=>{
+        const product=o.gift_name?(o.gift_name.startsWith("Telegram Premium")?"💎 "+escapeHtml(o.gift_name):"🎁 "+escapeHtml(o.gift_name)+" × "+o.quantity):"⭐ "+o.stars+" Stars";
+        const when=o.created_at?new Date(o.created_at+"Z").toLocaleString():"";
+        return '<div class="profile-order"><b>Заказ #'+o.id+'</b><br>'+product+'<br>Покупатель: '+(o.username?"@"+escapeHtml(o.username):"ID "+o.user_id)+' · ID '+o.user_id+'<br>Получатель: @'+escapeHtml(o.recipient)+'<br><b>'+o.price+' '+o.currency+'</b> · '+escapeHtml(o.status)+'<br><small>'+escapeHtml(when)+'</small></div>';
+      }).join("");
     }
     async function renderProfile(){
       const user=tg?.initDataUnsafe?.user;
@@ -411,6 +485,7 @@
       document.getElementById("payment").style.display = "none";
       document.querySelector(".header").scrollIntoView({behavior:"smooth"});
     }
+    checkAdminAccess();
   </script>
 </body>
 </html>
