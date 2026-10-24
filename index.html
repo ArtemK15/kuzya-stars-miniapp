@@ -62,7 +62,7 @@
   </nav>
   <section class="profile" id="profilePanel">
     <h2>👤 Личный кабинет</h2><div id="profileInfo">Загрузка профиля Telegram…</div>
-    <h3>📦 Мои заказы</h3><div id="profileOrders">История заказов будет подключена к серверу следующим этапом.</div>
+    <h3>📦 Мои заказы</h3><div id="profileOrders">Открываю историю заказов…</div>
   </section>
   <section class="cart-panel" id="cartPanel" style="display:none">
     <h2>🛒 Корзина подарков</h2><div id="cartItems">Корзина пока пуста.</div>
@@ -131,11 +131,25 @@
       if(tab==="cart") renderCart();
       window.scrollTo({top:0,behavior:"smooth"});
     }
-    function renderProfile(){
+    async function renderProfile(){
       const user=tg?.initDataUnsafe?.user;
       document.getElementById("profileInfo").innerHTML=user
         ? "<b>"+escapeHtml([user.first_name,user.last_name].filter(Boolean).join(" "))+"</b><br>"+(user.username?"@"+escapeHtml(user.username):"Username не указан")+"<br>ID: "+user.id
         : "Открой Mini App внутри Telegram, чтобы увидеть профиль.";
+      const ordersEl=document.getElementById("profileOrders");
+      if(!tg?.initData){ordersEl.textContent="История заказов доступна при открытии магазина внутри Telegram.";return;}
+      ordersEl.textContent="Загружаю заказы…";
+      try{
+        const response=await fetch(API_BASE+"/api/orders",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData})});
+        const data=await response.json();
+        if(!response.ok)throw new Error(data.detail||"Не удалось загрузить заказы");
+        if(!data.orders?.length){ordersEl.textContent="Заказов пока нет.";return;}
+        ordersEl.innerHTML=data.orders.map(o=>{
+          const item=o.gift_name?("🎁 "+escapeHtml(o.gift_name)+" × "+o.quantity):("⭐ "+o.stars+" Stars");
+          const when=o.created_at?new Date(o.created_at+"Z").toLocaleString():"";
+          return '<div class="cart-row"><div><b>Заказ #'+o.id+'</b><br>'+item+'<br>Получатель: @'+escapeHtml(o.recipient)+'<br>'+o.price+' '+o.currency+' · '+escapeHtml(o.status)+'<br><small>'+escapeHtml(when)+'</small></div></div>';
+        }).join("");
+      }catch(e){ordersEl.textContent=e.message||"Не удалось загрузить историю заказов.";}
     }
     function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
     function addGiftToCart(name,price,stock,qty=1){
