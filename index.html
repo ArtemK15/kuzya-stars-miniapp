@@ -47,6 +47,15 @@
     .nav button {background:#242238}
     .profile {display:none;padding:16px;border:1px solid #6d4bc3;border-radius:16px;background:#151527;margin:16px 0}
     .profile-order {padding:10px 0;border-bottom:1px solid #343044;font-size:13px;line-height:1.5}
+    .premium-card { background:linear-gradient(145deg,#241b0d,#14121a 75%); border:1px solid #d4a943; border-radius:17px; padding:17px 10px; text-align:center; box-shadow:inset 0 0 18px #d4a94312; }
+    .premium-card .gift-icon { font-size:32px; }
+    .premium-card .gift-name { color:#f5d779; }
+    .premium-price { color:#f4cc67; font-size:16px; font-weight:bold; margin:10px 0 5px; }
+    .premium-old { color:#888397; font-size:11px; text-decoration:line-through; margin-bottom:12px; }
+    .premium-card button { background:linear-gradient(100deg,#806022,#e2bd58); color:#111; }
+    .premium-checkout { display:none; margin-top:18px; padding:17px; border:1px solid #d4a943; border-radius:16px; background:#171522; text-align:center; }
+    .premium-checkout input { width:100%; padding:13px; border-radius:10px; border:1px solid #a77d2e; background:#0b0b18; color:#fff; font-size:15px; margin:8px 0 12px; }
+    .premium-checkout .orderline { color:#f2d78f; }
   </style>
 </head>
 <body>
@@ -84,6 +93,28 @@
     <div class="product"><div class="star">⭐</div><div class="quantity">1500 Stars</div><div class="price">2177 ₽</div><button onclick="selectProduct(1500, 2177)">Выбрать</button></div>
     <div class="product"><div class="star">⭐</div><div class="quantity">2000 Stars</div><div class="price">2887 ₽</div><button onclick="selectProduct(2000, 2887)">Выбрать</button></div>
   </div>
+  <h2>💎 Telegram Premium</h2>
+  <p class="section-subtitle">Выбери срок подписки. Скидка 3% уже учтена в цене. Оформление вручную после подтверждения оплаты.</p>
+  <div class="products" id="premiumProducts">
+    <div class="premium-card"><div class="gift-icon">💎</div><div class="gift-name">3 месяца</div><div class="premium-price">1 078 ₽</div><div class="premium-old">1 111 ₽</div><button onclick="selectPremium(3,1078)">Выбрать</button></div>
+    <div class="premium-card"><div class="gift-icon">👑</div><div class="gift-name">6 месяцев</div><div class="premium-price">1 454 ₽</div><div class="premium-old">1 499 ₽</div><button onclick="selectPremium(6,1454)">Выбрать</button></div>
+    <div class="premium-card"><div class="gift-icon">✨</div><div class="gift-name">12 месяцев</div><div class="premium-price">2 586 ₽</div><div class="premium-old">2 666 ₽</div><button onclick="selectPremium(12,2586)">Выбрать</button></div>
+  </div>
+  <section class="premium-checkout" id="premiumCheckout" aria-live="polite">
+    <h2>💎 Оформление Telegram Premium</h2>
+    <div class="orderline" id="premiumOrderName"></div>
+    <div class="orderline" id="premiumOrderPrice"></div>
+    <label for="premiumRecipient" style="display:block;text-align:left;margin:14px 0 6px;color:#f2d78f">Username получателя в Telegram</label>
+    <input id="premiumRecipient" autocomplete="off" placeholder="@username">
+    <p style="font-size:12px;color:#aaa;line-height:1.5">После оформления заказ появится у владельца магазина. Подписка будет выдана вручную после подтверждения оплаты.</p>
+    <button id="premiumSubmit" onclick="createPremiumOrder()">📦 Создать заказ</button>
+    <div id="premiumResult" style="display:none;margin-top:14px">
+      <div class="orderline" id="premiumCreatedOrder"></div>
+      <button onclick="openPremiumPayment()">🏦 Перейти к оплате в Т-Банк</button>
+      <button class="secondary" onclick="premiumPaymentNotice()">✅ Я оплатил</button>
+    </div>
+    <button class="secondary" onclick="cancelPremiumSelection()">❌ Отменить</button>
+  </section>
   <h2>🎁 Telegram-подарки за XTR</h2>
   <p class="section-subtitle">Выбери подарок. Выдача подарков выполняется вручную после подтверждения оплаты.</p>
   <div class="products" id="giftProducts">
@@ -262,6 +293,93 @@
       closeGift();
       document.getElementById("giftProducts").scrollIntoView({behavior:"smooth", block:"start"});
     }
+    let selectedPremium = null;
+    let premiumOrder = null;
+    let premiumBusy = false;
+    const BANK_PAYMENT_URL = "https://www.tbank-online.com/rm/r_WZlztaRLrZ.hhcTUJjdlP/gINWL2608";
+
+    function selectPremium(months, price) {
+      selectedPremium = {months, price};
+      premiumOrder = null;
+      document.getElementById("premiumRecipient").value = "";
+      document.getElementById("premiumOrderName").textContent = "Срок: " + months + " мес.";
+      document.getElementById("premiumOrderPrice").textContent = "К оплате: " + price.toLocaleString("ru-RU") + " ₽";
+      document.getElementById("premiumResult").style.display = "none";
+      document.getElementById("premiumSubmit").disabled = false;
+      document.getElementById("premiumSubmit").textContent = "📦 Создать заказ";
+      document.getElementById("premiumCheckout").style.display = "block";
+      document.getElementById("premiumCheckout").scrollIntoView({behavior:"smooth", block:"start"});
+    }
+
+    async function createPremiumOrder() {
+      if (premiumBusy) return;
+      if (!tg?.initData) {
+        alert("Открой Mini App внутри Telegram, чтобы создать заказ.");
+        return;
+      }
+      if (!selectedPremium) {
+        alert("Сначала выбери срок Telegram Premium.");
+        return;
+      }
+      const recipient = document.getElementById("premiumRecipient").value.trim();
+      if (!/^@?[A-Za-z0-9_]{5,32}$/.test(recipient)) {
+        alert("Введи корректный Telegram username получателя (5–32 символа).");
+        return;
+      }
+      premiumBusy = true;
+      const button = document.getElementById("premiumSubmit");
+      button.disabled = true;
+      button.textContent = "Создаём заказ…";
+      try {
+        const response = await fetch(API_BASE + "/api/premium/order", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({initData: tg.initData, months: selectedPremium.months, recipient})
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || "Не удалось создать заказ");
+        premiumOrder = data;
+        document.getElementById("premiumCreatedOrder").textContent =
+          "Заказ №" + data.order_id + " · " + data.months + " мес. · " + data.price.toLocaleString("ru-RU") + " ₽ · ожидает оплаты";
+        document.getElementById("premiumResult").style.display = "block";
+        button.textContent = "✅ Заказ создан";
+        if (typeof renderProfile === "function") renderProfile();
+      } catch (error) {
+        alert(error.message || "Ошибка создания заказа.");
+        button.disabled = false;
+        button.textContent = "📦 Создать заказ";
+      } finally {
+        premiumBusy = false;
+      }
+    }
+
+    function openPremiumPayment() {
+      if (!premiumOrder) return;
+      const url = premiumOrder.payment_url || BANK_PAYMENT_URL;
+      if (tg?.openLink) tg.openLink(url);
+      else window.open(url, "_blank", "noopener,noreferrer");
+    }
+
+    function premiumPaymentNotice() {
+      if (!premiumOrder) return;
+      const text = "Заказ Telegram Premium №" + premiumOrder.order_id +
+        ". Покупатель сообщает об оплате " + premiumOrder.price + " ₽. Проверь поступление средств вручную.";
+      document.getElementById("premiumCreatedOrder").textContent += " · заявка об оплате отмечена";
+      if (tg?.openTelegramLink) {
+        tg.openTelegramLink("https://t.me/saskofff");
+        if (tg.showAlert) tg.showAlert("Напиши в поддержку и укажи номер заказа №" + premiumOrder.order_id + ". Это сообщение не подтверждает поступление денег.");
+      } else {
+        alert("Напиши в поддержку @saskofff и укажи заказ №" + premiumOrder.order_id + ". Это не подтверждает поступление денег.");
+      }
+    }
+
+    function cancelPremiumSelection() {
+      selectedPremium = null;
+      premiumOrder = null;
+      document.getElementById("premiumCheckout").style.display = "none";
+      document.getElementById("premiumProducts").scrollIntoView({behavior:"smooth", block:"start"});
+    }
+
     function selectProduct(quantity, price) {
       const orderId = "KZ-" + Date.now().toString().slice(-8);
       currentOrder = { orderId, quantity, price };
