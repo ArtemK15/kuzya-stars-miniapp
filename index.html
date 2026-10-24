@@ -10,11 +10,20 @@
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; padding: 22px 16px 35px; background: #0b0b18; color: #ffffff; font-family: Arial, sans-serif; }
-    .header { margin: 0 0 22px; padding: 0; border: 1px solid #6f5526; border-radius: 18px; overflow: hidden; background: #09080b; box-shadow: 0 8px 28px #d4a94318; line-height: 0; }
+    .header { margin: 0 0 22px; padding: 0; border: 1px solid #6f5526; border-radius: 18px; overflow: hidden; background: #09080b; box-shadow: 0 8px 28px #d4a94318; line-height: 0; animation: bannerGlow 4s ease-in-out infinite; }
     .header-banner { display: block; width: 100%; height: auto; object-fit: contain; }
-    h2 { font-size: 19px; margin: 25px 0 14px; }
+    h2 { font-size: 19px; margin: 25px 0 14px; animation: fadeUp .55s ease both; }
     .products { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-    .product { background: #151527; border: 1px solid #2d2b4c; border-radius: 17px; padding: 18px 10px; text-align: center; }
+    .product, .gift-card, .premium-card { animation: fadeUp .55s ease both; transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease; }
+    .product:hover, .gift-card:hover, .premium-card:hover { transform: translateY(-4px); border-color: #d4a943; box-shadow: 0 8px 24px #d4a94320; }
+    .products > :nth-child(2n) { animation-delay: .07s; }
+    .products > :nth-child(3n) { animation-delay: .14s; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes bannerGlow { 0%, 100% { box-shadow: 0 8px 28px #d4a94318; } 50% { box-shadow: 0 8px 32px #d4a94345; } }
+    button { transition: transform .18s ease, filter .18s ease, box-shadow .18s ease; }
+    button:hover { transform: translateY(-1px); filter: brightness(1.12); box-shadow: 0 4px 14px #d4a94325; }
+    button:active { transform: scale(.97); }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
     .star { font-size: 31px; margin-bottom: 9px; }
     .quantity { font-size: 19px; font-weight: bold; margin-bottom: 7px; }
     .price { color: #b9a7ff; font-size: 15px; margin-bottom: 14px; }
