@@ -195,6 +195,20 @@
     <label for="botPostPhoto" style="display:block;margin:12px 0 6px">Фотография (необязательно)</label>
     <input id="botPostPhoto" type="file" accept="image/jpeg,image/png,image/webp" style="width:100%;padding:10px;border:1px solid #6e5426;border-radius:10px;background:#0b0b18;color:#fff">
     <div id="botPostPhotoPreview" style="margin-top:8px"></div>
+    <div class="sticker-picker" style="margin:14px 0;padding:14px;border:1px solid #6e5426;border-radius:16px;background:#11101e">
+      <h4 style="margin:0 0 6px;color:#f4cc67">🎭 Стикеры Telegram</h4>
+      <p class="section-subtitle" style="margin:0 0 10px">Загрузи набор по ссылке Telegram или выбери стикер из своей сохранённой галереи. Выбор файлов не нужен.</p>
+      <label for="stickerPackUrl" style="display:block;margin:8px 0 6px">Ссылка на набор</label>
+      <input id="stickerPackUrl" placeholder="https://t.me/addstickers/..." style="width:100%;padding:12px;border-radius:10px;background:#0b0b18;color:#fff;border:1px solid #6e5426">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+        <button type="button" onclick="loadAdminStickerPack()">🔎 Открыть набор</button>
+        <button type="button" class="secondary" onclick="loadAdminStickerFavorites()">⭐ Мои сохранённые</button>
+      </div>
+      <div id="stickerPickerStatus" class="section-subtitle" style="margin:10px 0"></div>
+      <div id="stickerPickerGrid" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px"></div>
+      <div id="selectedStickerStatus" class="section-subtitle" style="margin-top:10px">Стикер не выбран.</div>
+      <button type="button" class="secondary" onclick="clearAdminStickerSelection()">✖ Убрать стикер из поста</button>
+    </div>
     <button onclick="publishBotPost()">📣 Опубликовать в Telegram-боте</button>
     <div id="botPostStatus" class="section-subtitle" style="margin-top:10px"></div>
     <h3>🗂 Опубликованные посты</h3>
@@ -547,7 +561,7 @@
     }
 
     let adminDashboardData = null;
-    let botPostPhotoData = "";
+    let botPostPhotoData = "";\n    let selectedAdminSticker = null;\n    let adminStickerCatalog = [];
     document.addEventListener("change",async event=>{
       if(event.target?.id!=="botPostPhoto")return;
       const file=event.target.files?.[0];
@@ -562,17 +576,72 @@
       }).catch(()=> "");
       if(botPostPhotoData)preview.innerHTML='<img alt="Предпросмотр фотографии" src="'+botPostPhotoData+'" style="max-width:100%;max-height:220px;border-radius:12px;border:1px solid #6e5426">';
     });
+    function renderAdminStickerGrid(stickers, mode){
+      const grid=document.getElementById("stickerPickerGrid");
+      adminStickerCatalog=Array.isArray(stickers)?stickers:[];
+      if(!adminStickerCatalog.length){grid.innerHTML='<p class="section-subtitle" style="grid-column:1/-1">Стикеры не найдены.</p>';return;}
+      grid.innerHTML=adminStickerCatalog.map((s,i)=>'<div style="padding:10px 6px;border:1px solid #38334d;border-radius:12px;text-align:center;background:#1a1829;min-width:0"><div style="font-size:28px">'+escapeHtml(s.emoji||"✨")+'</div><div style="font-size:10px;color:#aaa6c5;overflow-wrap:anywhere">'+escapeHtml(s.format||(s.is_animated?"анимация":"стикер"))+'</div><button type="button" style="padding:8px 4px;font-size:11px;margin-top:6px" onclick="selectAdminSticker('+i+')">Выбрать</button><button type="button" class="secondary" style="padding:7px 3px;font-size:10px;margin-top:4px" onclick="saveAdminSticker('+i+')">⭐ Сохранить</button>'+(mode==="favorites"?'<button type="button" class="secondary" style="padding:7px 3px;font-size:10px;margin-top:4px" onclick="removeAdminSticker('+i+')">Удалить</button>':'')+'</div>').join("");
+    }
+    async function loadAdminStickerPack(){
+      const status=document.getElementById("stickerPickerStatus");
+      if(!tg?.initData){status.textContent="Открой Mini App в Telegram под аккаунтом администратора.";return;}
+      const pack_name=document.getElementById("stickerPackUrl").value.trim();
+      if(!pack_name){status.textContent="Вставь ссылку t.me/addstickers/…";return;}
+      status.textContent="Загружаю набор из Telegram…";
+      try{
+        const response=await fetch(API_BASE+"/api/admin/stickers/pack",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,pack_name})});
+        const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось загрузить набор");
+        status.textContent="Набор: "+data.title+" · "+data.stickers.length+" стикеров";
+        renderAdminStickerGrid(data.stickers,"pack");
+      }catch(e){status.textContent="Ошибка: "+(e.message||"не удалось загрузить набор");}
+    }
+    async function loadAdminStickerFavorites(){
+      const status=document.getElementById("stickerPickerStatus");
+      if(!tg?.initData){status.textContent="Открой Mini App в Telegram под аккаунтом администратора.";return;}
+      status.textContent="Загружаю сохранённые стикеры…";
+      try{
+        const response=await fetch(API_BASE+"/api/admin/stickers/favorites?initData="+encodeURIComponent(tg.initData),{cache:"no-store"});
+        const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось загрузить галерею");
+        status.textContent="⭐ Сохранённая галерея · "+data.stickers.length+" стикеров";
+        renderAdminStickerGrid(data.stickers,"favorites");
+      }catch(e){status.textContent="Ошибка: "+(e.message||"не удалось загрузить галерею");}
+    }
+    function selectAdminSticker(index){
+      selectedAdminSticker=adminStickerCatalog[index];
+      const s=selectedAdminSticker;
+      document.getElementById("selectedStickerStatus").textContent="✅ Выбран стикер "+(s.emoji||"✨")+" из набора "+(s.set_name||"сохранённой галереи")+". Он будет отправлен вместе с постом.";
+    }
+    function clearAdminStickerSelection(){
+      selectedAdminSticker=null;
+      document.getElementById("selectedStickerStatus").textContent="Стикер не выбран.";
+    }
+    async function saveAdminSticker(index){
+      const s=adminStickerCatalog[index], status=document.getElementById("stickerPickerStatus");
+      try{
+        const response=await fetch(API_BASE+"/api/admin/stickers/favorites",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,file_id:s.file_id,emoji:s.emoji||"✨",set_name:s.set_name||"",is_animated:!!s.is_animated})});
+        const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось сохранить");
+        status.textContent="⭐ Стикер сохранён в твою галерею.";
+      }catch(e){status.textContent="Ошибка сохранения: "+(e.message||"не удалось сохранить");}
+    }
+    async function removeAdminSticker(index){
+      const s=adminStickerCatalog[index], status=document.getElementById("stickerPickerStatus");
+      try{
+        const response=await fetch(API_BASE+"/api/admin/stickers/favorites?initData="+encodeURIComponent(tg.initData)+"&file_id="+encodeURIComponent(s.file_id),{method:"DELETE"});
+        const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось удалить");
+        await loadAdminStickerFavorites();
+      }catch(e){status.textContent="Ошибка удаления: "+(e.message||"не удалось удалить");}
+    }
     async function publishBotPost(){
       const status=document.getElementById("botPostStatus");
       if(!tg?.initData){status.textContent="Открой Mini App в Telegram под аккаунтом администратора.";return;}
       const title=document.getElementById("botPostTitle").value.trim();
       const message=document.getElementById("botPostMessage").value.trim();
-      if(!message&&!botPostPhotoData){status.textContent="Добавь текст или фотографию.";return;}
+      if(!message&&!botPostPhotoData&&!selectedAdminSticker){status.textContent="Добавь текст, фотографию или выбери стикер.";return;}
       if(botPostPhotoData&&(title.length+message.length>1000)){status.textContent="Для поста с фотографией заголовок и текст вместе должны быть не длиннее 1000 символов.";return;}
       if(!confirm("Опубликовать этот пост пользователям Telegram-бота? Отправка начнётся сразу."))return;
       status.textContent="Отправляю пост пользователям… Не закрывай Mini App.";
       try{
-        const response=await fetch(API_BASE+"/api/admin/posts/publish",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,title,message,photo_data:botPostPhotoData})});
+        const response=await fetch(API_BASE+"/api/admin/posts/publish",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,title,message,photo_data:botPostPhotoData,sticker_file_id:selectedAdminSticker?.file_id||""})});
         const data=await response.json();
         if(!response.ok)throw new Error(data.detail||"Не удалось опубликовать пост");
         status.textContent="✅ Пост №"+data.post_id+" обработан. Доставлено: "+data.delivered+"; не доставлено: "+data.failed+"; пользователей в базе: "+data.recipients+".";
