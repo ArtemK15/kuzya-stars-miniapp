@@ -547,6 +547,20 @@
     <button onclick="saveAnnouncement()">📢 Сохранить и опубликовать</button>
     <button class="secondary" onclick="disableAnnouncement()">🗑 Снять объявление</button>
     <div id="announcementAdminStatus" class="section-subtitle" style="margin-top:10px"></div>
+    <h3>💳 Способы оплаты</h3>
+    <p class="section-subtitle">Измени номера карт, ссылку СБП или временно отключи способ оплаты. Изменения сохраняются без редактирования кода.</p>
+    <label for="paymentSbpUrl" style="display:block;margin:10px 0 6px">Ссылка оплаты по СБП</label>
+    <input id="paymentSbpUrl" type="url" placeholder="https://..." style="width:100%;padding:12px;background:#0b0b18;color:#fff;border:1px solid #6e5426;margin-bottom:8px">
+    <label for="paymentTbankCard" style="display:block;margin:10px 0 6px">Номер карты Т-Банка</label>
+    <input id="paymentTbankCard" inputmode="numeric" maxlength="23" placeholder="Номер карты Т-Банка" style="width:100%;padding:12px;background:#0b0b18;color:#fff;border:1px solid #6e5426;margin-bottom:8px">
+    <label for="paymentSberCard" style="display:block;margin:10px 0 6px">Номер карты Сбера</label>
+    <input id="paymentSberCard" inputmode="numeric" maxlength="23" placeholder="Номер карты Сбера" style="width:100%;padding:12px;background:#0b0b18;color:#fff;border:1px solid #6e5426;margin-bottom:8px">
+    <label style="display:flex;align-items:center;gap:8px;margin:10px 0;color:#ddd6ff"><input id="paymentSbpEnabled" type="checkbox" checked style="width:auto"> Включить оплату по СБП</label>
+    <label style="display:flex;align-items:center;gap:8px;margin:10px 0;color:#ddd6ff"><input id="paymentTbankEnabled" type="checkbox" checked style="width:auto"> Включить карту Т-Банка</label>
+    <label style="display:flex;align-items:center;gap:8px;margin:10px 0;color:#ddd6ff"><input id="paymentSberEnabled" type="checkbox" checked style="width:auto"> Включить карту Сбера</label>
+    <button onclick="savePaymentMethods()">💾 Сохранить способы оплаты</button>
+    <button class="secondary" onclick="loadPaymentMethods(true)">🔄 Загрузить текущие настройки</button>
+    <div id="paymentMethodsAdminStatus" class="section-subtitle" style="margin-top:10px"></div>
     <h3>📨 Посты в Telegram-боте</h3>
     <p class="section-subtitle">Публикация отправит пост сообщением в чат бота тем пользователям, которые запускали бота. Фото поддерживаются в JPG, PNG и WEBP, до 10 МБ.</p>
     <label for="botPostTitle" style="display:block;margin:10px 0 6px">Заголовок поста</label>
@@ -1080,6 +1094,7 @@
         document.getElementById("adminNavButton").style.display="block";
         document.getElementById("analyticsNavButton").style.display="block";
         renderAdminDashboard();
+        loadPaymentMethods(true);
         await loadBotPosts();
         const announcementResponse=await fetch(API_BASE+"/api/announcement",{cache:"no-store"});
         if(announcementResponse.ok){
@@ -1366,6 +1381,63 @@
       document.getElementById("payment").style.display = "block";
       document.getElementById("payment").scrollIntoView({behavior:"smooth", block:"start"});
     }
+    let paymentMethodsConfig = {
+      sbp_url: "https://www.tbank-online.com/rm/r_WZlztaRLrZ.hhcTUJjdlP/gINWL2608",
+      tbank_card: "4377723787063571",
+      sber_card: "4817760248794533",
+      sbp_enabled: true, tbank_enabled: true, sber_enabled: true
+    };
+    function formatCardNumber(value) {
+      return String(value || "").replace(/\\D/g, "").replace(/(.{4})/g, "$1 ").trim();
+    }
+    async function loadPaymentMethods(fillAdmin = false) {
+      try {
+        const response = await fetch(API_BASE + "/api/payment-methods");
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || "Не удалось загрузить способы оплаты");
+        paymentMethodsConfig = {...paymentMethodsConfig, ...data};
+        document.getElementById("bankCardNumber").textContent = formatCardNumber(paymentMethodsConfig.tbank_card);
+        document.getElementById("sberCardNumber").textContent = formatCardNumber(paymentMethodsConfig.sber_card);
+        document.getElementById("sbpMethodButton").style.display = paymentMethodsConfig.sbp_enabled ? "" : "none";
+        document.getElementById("cardMethodButton").style.display = paymentMethodsConfig.tbank_enabled ? "" : "none";
+        document.getElementById("sberMethodButton").style.display = paymentMethodsConfig.sber_enabled ? "" : "none";
+        if (fillAdmin) {
+          document.getElementById("paymentSbpUrl").value = paymentMethodsConfig.sbp_url || "";
+          document.getElementById("paymentTbankCard").value = formatCardNumber(paymentMethodsConfig.tbank_card);
+          document.getElementById("paymentSberCard").value = formatCardNumber(paymentMethodsConfig.sber_card);
+          document.getElementById("paymentSbpEnabled").checked = !!paymentMethodsConfig.sbp_enabled;
+          document.getElementById("paymentTbankEnabled").checked = !!paymentMethodsConfig.tbank_enabled;
+          document.getElementById("paymentSberEnabled").checked = !!paymentMethodsConfig.sber_enabled;
+        }
+        if (!paymentMethodsConfig.sbp_enabled && paymentMethodsConfig.tbank_enabled) selectPaymentMethod("card");
+        else if (!paymentMethodsConfig.sbp_enabled && !paymentMethodsConfig.tbank_enabled && paymentMethodsConfig.sber_enabled) selectPaymentMethod("sber");
+      } catch (e) {
+        if (fillAdmin) document.getElementById("paymentMethodsAdminStatus").textContent = e.message || "Не удалось загрузить настройки.";
+      }
+    }
+    async function savePaymentMethods() {
+      const status = document.getElementById("paymentMethodsAdminStatus");
+      if (!tg?.initData) { status.textContent = "Открой Mini App внутри Telegram под аккаунтом администратора."; return; }
+      status.textContent = "Сохраняю настройки…";
+      const payload = {
+        initData: tg.initData,
+        sbp_url: document.getElementById("paymentSbpUrl").value.trim(),
+        tbank_card: document.getElementById("paymentTbankCard").value.replace(/\\D/g, ""),
+        sber_card: document.getElementById("paymentSberCard").value.replace(/\\D/g, ""),
+        sbp_enabled: document.getElementById("paymentSbpEnabled").checked,
+        tbank_enabled: document.getElementById("paymentTbankEnabled").checked,
+        sber_enabled: document.getElementById("paymentSberEnabled").checked
+      };
+      try {
+        const response = await fetch(API_BASE + "/api/admin/payment-methods", {
+          method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || "Не удалось сохранить настройки");
+        await loadPaymentMethods(false);
+        status.textContent = "✅ Настройки сохранены. Покупатели увидят обновлённые данные после обновления Mini App.";
+      } catch (e) { status.textContent = e.message || "Ошибка сохранения настроек."; }
+    }
     function selectPaymentMethod(method) {
       const isCard = method === "card";
       const isSber = method === "sber";
@@ -1389,10 +1461,10 @@
       }
     }
     async function copyBankCardNumber() {
-      await copyCardNumber("4377723787063571", "4377 7237 8706 3571", "Т-Банка");
+      await copyCardNumber(paymentMethodsConfig.tbank_card, formatCardNumber(paymentMethodsConfig.tbank_card), "Т-Банка");
     }
     async function copySberCardNumber() {
-      await copyCardNumber("4817760248794533", "4817 7602 4879 4533", "Сбера");
+      await copyCardNumber(paymentMethodsConfig.sber_card, formatCardNumber(paymentMethodsConfig.sber_card), "Сбера");
     }
     async function copyCardNumber(number, formatted, bank) {
       try {
@@ -1404,7 +1476,7 @@
       }
     }
     function openBankPayment() {
-      window.open("https://www.tbank-online.com/rm/r_WZlztaRLrZ.hhcTUJjdlP/gINWL2608", "_blank", "noopener,noreferrer");
+      window.open(paymentMethodsConfig.sbp_url || "https://www.tbank-online.com/rm/r_WZlztaRLrZ.hhcTUJjdlP/gINWL2608", "_blank", "noopener,noreferrer");
     }
     function markPaid() {
       if (!currentOrder) return;
@@ -1424,6 +1496,7 @@
     }
     checkAdminAccess();
     loadPublicAnnouncement();
+    loadPaymentMethods(false);
     startAnalyticsHeartbeat();
     document.addEventListener("visibilitychange", () => { if (!document.hidden) sendAnalyticsHeartbeat(); });
   </script>
