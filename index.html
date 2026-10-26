@@ -320,6 +320,129 @@
       #cartTotal { font-size: 16px; }
     }
 
+  
+    /* Checkout polish: visual-only; order creation, prices and payment callbacks are unchanged. */
+    #payment, #giftCheckout, #premiumCheckout {
+      position: relative;
+      overflow: hidden;
+      padding: clamp(16px, 4vw, 24px);
+      border-radius: 20px;
+      box-shadow: 0 14px 34px #0000002b, inset 0 1px 0 #ffffff0a;
+      line-height: 1.55;
+    }
+    #payment {
+      border-color: #9b7835;
+      background:
+        radial-gradient(ellipse at top right, #4a351b55 0%, transparent 60%),
+        linear-gradient(145deg, #1b1929, #10101b);
+    }
+    #giftCheckout {
+      border-color: #7b5ad1;
+      background:
+        radial-gradient(ellipse at top right, #38245c55 0%, transparent 60%),
+        linear-gradient(145deg, #1b192b, #10101b);
+    }
+    #premiumCheckout {
+      border-color: #b38b3d;
+      background:
+        radial-gradient(ellipse at top right, #4a351b55 0%, transparent 60%),
+        linear-gradient(145deg, #211b14, #11101b);
+    }
+    #payment h2, #giftCheckout h2, #premiumCheckout h2 {
+      margin-top: 0;
+      margin-bottom: 16px;
+      font-size: clamp(19px, 5vw, 23px);
+      line-height: 1.3;
+    }
+    #payment h2, #premiumCheckout h2 { color: #f5d779; }
+    #giftCheckout h2 { color: #c7b1ff; }
+    #payment .orderline, #giftCheckout .orderline, #premiumCheckout .orderline {
+      margin: 8px 0;
+      padding: 11px 12px;
+      border: 1px solid #3a3347;
+      border-radius: 12px;
+      background: #0d0c18a8;
+      color: #f0eaff;
+      overflow-wrap: anywhere;
+      text-align: left;
+    }
+    #payment #orderAmount, #giftCheckout #giftOrderPrice, #premiumCheckout #premiumOrderPrice {
+      border-color: #80642e;
+      background: linear-gradient(110deg, #342711, #211a27);
+      color: #f6d77d;
+      font-size: 17px;
+      font-weight: 800;
+    }
+    #giftCheckout #giftOrderStock {
+      color: #c2bad8;
+      font-size: 12px;
+    }
+    #payment label, #giftCheckout label, #premiumCheckout label {
+      display: block;
+      margin: 16px 0 7px;
+      color: #ddd6ff;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: left;
+    }
+    #giftRecipient, #premiumRecipient {
+      width: 100%;
+      min-height: 48px;
+      margin: 6px 0 10px;
+      padding: 13px 14px;
+      border: 1px solid #55466f;
+      border-radius: 12px;
+      background: #0b0b18;
+      color: #fff;
+      font-size: 16px;
+    }
+    #giftRecipient:focus, #premiumRecipient:focus {
+      border-color: #b79aff;
+      outline: 2px solid #b79aff33;
+    }
+    #payment button, #giftCheckout button, #premiumCheckout button {
+      min-height: 47px;
+      margin-top: 8px;
+      border-radius: 13px;
+    }
+    #payment button:first-of-type,
+    #giftCheckout button[onclick*="payForGift"],
+    #premiumCheckout button[onclick*="openPremiumPayment"] {
+      background: linear-gradient(105deg, #806022, #e0b84f);
+      color: #17121a;
+      box-shadow: 0 6px 18px #d4a94320;
+    }
+    #giftCheckout button[onclick*="addGiftToCart"] {
+      background: linear-gradient(105deg, #7652d8, #9a63f4);
+      color: #fff;
+    }
+    #payment img {
+      max-width: min(100%, 280px);
+      padding: 8px;
+      border: 1px solid #ded5f4;
+      box-shadow: 0 8px 24px #00000038;
+    }
+    #payment p, #giftCheckout p, #premiumCheckout p {
+      color: #aaa6bd !important;
+      line-height: 1.65 !important;
+      text-align: left;
+    }
+    #payment #paymentStatus {
+      border-color: #80642e;
+      color: #f6d77d;
+      font-weight: 700;
+    }
+    #premiumResult {
+      padding: 12px;
+      border: 1px solid #6f5526;
+      border-radius: 14px;
+      background: #0d0c18a8;
+    }
+    @media (max-width: 380px) {
+      #payment, #giftCheckout, #premiumCheckout { padding: 14px; }
+      #payment .orderline, #giftCheckout .orderline, #premiumCheckout .orderline { padding: 10px; }
+    }
+
   </style>
 </head>
 <body>
