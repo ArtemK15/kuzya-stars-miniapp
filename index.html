@@ -547,6 +547,12 @@
     <button onclick="saveAnnouncement()">📢 Сохранить и опубликовать</button>
     <button class="secondary" onclick="disableAnnouncement()">🗑 Снять объявление</button>
     <div id="announcementAdminStatus" class="section-subtitle" style="margin-top:10px"></div>
+    <h3>💎 Telegram Premium и 🎁 подарки</h3>
+    <p class="section-subtitle">Настраивай цены Premium в рублях, стоимость подарков в XTR и остатки. Изменения сохраняются на сервере.</p>
+    <div id="catalogPricingAdminList" style="display:grid;gap:10px;margin:12px 0"></div>
+    <button type="button" onclick="saveCatalogPricing()">💾 Сохранить цены Premium и подарков</button>
+    <button type="button" class="secondary" onclick="loadCatalogPricing(true)">🔄 Загрузить сохранённые</button>
+    <div id="catalogPricingAdminStatus" class="section-subtitle" style="margin-top:10px"></div>
     <h3>🏷️ Промокоды</h3>
     <p class="section-subtitle">Создавай коды скидки для покупателей. Пример: KUZYA10 — скидка 10%. Неактивные коды нельзя применить.</p>
     <div id="promoCodesAdminList" style="display:grid;gap:8px;margin:12px 0"></div>
@@ -630,11 +636,7 @@
   <div class="products" id="shopStarsProducts"><div class="section-subtitle">Загрузка пакетов Stars…</div></div>
   <h2>💎 Telegram Premium</h2>
   <p class="section-subtitle">Выбери срок подписки. Скидка 3% уже учтена в цене. Оформление вручную после подтверждения оплаты.</p>
-  <div class="products" id="premiumProducts">
-    <div class="premium-card"><div class="gift-icon">💎</div><div class="gift-name">3 месяца</div><div class="premium-price">1 078 ₽</div><div class="premium-old">1 111 ₽</div><button onclick="selectPremium(3,1078)">Выбрать</button></div>
-    <div class="premium-card"><div class="gift-icon">👑</div><div class="gift-name">6 месяцев</div><div class="premium-price">1 454 ₽</div><div class="premium-old">1 499 ₽</div><button onclick="selectPremium(6,1454)">Выбрать</button></div>
-    <div class="premium-card"><div class="gift-icon">✨</div><div class="gift-name">12 месяцев</div><div class="premium-price">2 586 ₽</div><div class="premium-old">2 666 ₽</div><button onclick="selectPremium(12,2586)">Выбрать</button></div>
-  </div>
+  <div class="products" id="premiumProducts"><div class="section-subtitle">Загрузка тарифов…</div></div>
   <section class="premium-checkout" id="premiumCheckout" aria-live="polite">
     <h2>💎 Оформление Telegram Premium</h2>
     <div class="orderline" id="premiumOrderName"></div>
@@ -652,13 +654,7 @@
   </section>
   <h2>🎁 Telegram-подарки за XTR</h2>
   <p class="section-subtitle">Выбери подарок. Выдача подарков выполняется вручную после подтверждения оплаты.</p>
-  <div class="products" id="giftProducts">
-    <div class="gift-card"><div class="gift-icon">🧸</div><div class="gift-name">Мишка</div><div class="gift-price">13 XTR</div><div class="gift-stock">Доступно: 100 шт.</div><button onclick="selectGift('Мишка',13,100)">Выбрать</button></div>
-    <div class="gift-card"><div class="gift-icon">🚀</div><div class="gift-name">Ракета</div><div class="gift-price">48 XTR</div><div class="gift-stock">Доступно: 50 шт.</div><button onclick="selectGift('Ракета',48,50)">Выбрать</button></div>
-    <div class="gift-card"><div class="gift-icon">💍</div><div class="gift-name">Кольцо</div><div class="gift-price">98 XTR</div><div class="gift-stock">Доступно: 50 шт.</div><button onclick="selectGift('Кольцо',98,50)">Выбрать</button></div>
-    <div class="gift-card"><div class="gift-icon">💎</div><div class="gift-name">Бриллиант / тортик</div><div class="gift-price">148 XTR</div><div class="gift-stock">Доступно: 50 шт.</div><button onclick="selectGift('Бриллиант/тортик',148,50)">Выбрать</button></div>
-    <div class="gift-card"><div class="gift-icon">🥂</div><div class="gift-name">Кольцо ×2 / Шампанское</div><div class="gift-price">248 XTR</div><div class="gift-stock">Доступно: 50 шт.</div><button onclick="selectGift('Кольцо(2х)/Шампанское',248,50)">Выбрать</button></div>
-  </div>
+  <div class="products" id="giftProducts"><div class="section-subtitle">Загрузка подарков…</div></div>
   <section class="gift-checkout" id="giftCheckout" aria-live="polite">
     <h2>🎁 Выбранный подарок</h2>
     <div class="orderline" id="giftOrderName"></div>
@@ -1101,6 +1097,7 @@
         loadPaymentMethods(true);
         loadShopProducts(true);
         loadPromoCodes(true);
+        loadCatalogPricing(true);
         await loadBotPosts();
         const announcementResponse=await fetch(API_BASE+"/api/announcement",{cache:"no-store"});
         if(announcementResponse.ok){
@@ -1452,6 +1449,42 @@
       document.getElementById("payment").style.display = "block";
       document.getElementById("payment").scrollIntoView({behavior:"smooth", block:"start"});
     }
+    let catalogPricing = {premium:[],gifts:[]};
+    function renderCatalogPricing() {
+      const premiumHost=document.getElementById("premiumProducts");
+      if(premiumHost) premiumHost.innerHTML=catalogPricing.premium.filter(p=>p.active!==false).map(p=>'<div class="premium-card"><div class="gift-icon">💎</div><div class="gift-name">'+Number(p.months)+' месяцев</div><div class="premium-price">'+Number(p.price).toLocaleString("ru-RU")+' ₽</div><button onclick="selectPremium('+Number(p.months)+','+Number(p.price)+')">Выбрать</button></div>').join("")||'<div class="section-subtitle">Тарифы временно недоступны.</div>';
+      const icons={"Мишка":"🧸","Ракета":"🚀","Кольцо":"💍","Бриллиант/тортик":"💎","Кольцо(2х)/Шампанское":"🥂"};
+      const giftHost=document.getElementById("giftProducts");
+      if(giftHost) giftHost.innerHTML=catalogPricing.gifts.filter(g=>g.active!==false).map(g=>'<div class="gift-card"><div class="gift-icon">'+(icons[g.name]||"🎁")+'</div><div class="gift-name">'+escapeHtml(g.name)+'</div><div class="gift-price">'+Number(g.price)+' XTR</div><div class="gift-stock">Доступно: '+Number(g.stock)+' шт.</div><button onclick="selectGift('+JSON.stringify(g.name)+','+Number(g.price)+','+Number(g.stock)+')">Выбрать</button></div>').join("")||'<div class="section-subtitle">Подарки временно недоступны.</div>';
+    }
+    function renderCatalogPricingAdmin() {
+      const host=document.getElementById("catalogPricingAdminList"); if(!host)return;
+      host.innerHTML='<h4 style="color:#f4cc67;margin:4px 0">💎 Premium — цена в ₽</h4>'+catalogPricing.premium.map((p,i)=>'<div data-catalog-kind="premium" data-catalog-index="'+i+'" style="padding:10px;border:1px solid #6e5426;border-radius:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px"><label>Месяцев<input data-field="months" type="number" min="3" max="12" value="'+Number(p.months)+'" disabled style="width:100%"></label><label>Цена, ₽<input data-field="price" type="number" min="1" value="'+Number(p.price)+'" style="width:100%"></label><label style="grid-column:1/-1"><input data-field="active" type="checkbox" '+(p.active!==false?'checked':'')+' style="width:auto"> Показывать тариф</label></div>').join("")+'<h4 style="color:#f4cc67;margin:8px 0 4px">🎁 Подарки — цена в XTR</h4>'+catalogPricing.gifts.map((g,i)=>'<div data-catalog-kind="gift" data-catalog-index="'+i+'" style="padding:10px;border:1px solid #6e5426;border-radius:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px"><label>Название<input data-field="name" value="'+escapeHtml(g.name)+'" disabled style="width:100%"></label><label>Цена, XTR<input data-field="price" type="number" min="1" value="'+Number(g.price)+'" style="width:100%"></label><label>Остаток, шт.<input data-field="stock" type="number" min="0" value="'+Number(g.stock)+'" style="width:100%"></label><label style="display:flex;align-items:center;gap:6px"><input data-field="active" type="checkbox" '+(g.active!==false?'checked':'')+' style="width:auto"> Активен</label></div>').join("");
+    }
+    function syncCatalogPricingInputs() {
+      document.querySelectorAll("[data-catalog-kind]").forEach(row=>{
+        const kind=row.dataset.catalogKind, i=Number(row.dataset.catalogIndex), item=catalogPricing[kind==="premium"?"premium":"gifts"][i]; if(!item)return;
+        row.querySelectorAll("[data-field]").forEach(input=>{item[input.dataset.field]=input.type==="checkbox"?input.checked:(input.type==="number"?Number(input.value):input.value);});
+      });
+    }
+    async function loadCatalogPricing(fillAdmin=false) {
+      try{
+        const url=fillAdmin&&tg?.initData?API_BASE+"/api/admin/catalog-pricing?initData="+encodeURIComponent(tg.initData):API_BASE+"/api/catalog-pricing";
+        const response=await fetch(url,{cache:"no-store"}), data=await response.json(); if(!response.ok)throw new Error(data.detail||"Не удалось загрузить цены");
+        catalogPricing={premium:data.premium||[],gifts:data.gifts||[]};renderCatalogPricing();if(fillAdmin)renderCatalogPricingAdmin();
+      }catch(e){const status=document.getElementById("catalogPricingAdminStatus");if(fillAdmin&&status)status.textContent=e.message||"Ошибка загрузки";}
+    }
+    async function saveCatalogPricing() {
+      const status=document.getElementById("catalogPricingAdminStatus");
+      if(!tg?.initData){status.textContent="Открой Mini App в Telegram под аккаунтом администратора.";return;}
+      syncCatalogPricingInputs();status.textContent="Сохраняю цены…";
+      try{
+        const response=await fetch(API_BASE+"/api/admin/catalog-pricing",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,premium:catalogPricing.premium,gifts:catalogPricing.gifts})});
+        const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось сохранить цены");
+        catalogPricing={premium:data.premium,gifts:data.gifts};renderCatalogPricing();renderCatalogPricingAdmin();status.textContent="✅ Цены Premium и подарков сохранены.";
+      }catch(e){status.textContent=e.message||"Ошибка сохранения";}
+    }
+
     let shopProducts = [];
     function effectiveShopPrice(p) { return Math.max(1, Math.round(Number(p.price) * (100 - Number(p.discount || 0)) / 100)); }
     function renderShopProducts() {
@@ -1622,6 +1655,7 @@
     loadPublicAnnouncement();
     loadPaymentMethods(false);
     loadShopProducts(false);
+    loadCatalogPricing(false);
     startAnalyticsHeartbeat();
     document.addEventListener("visibilitychange", () => { if (!document.hidden) sendAnalyticsHeartbeat(); });
   </script>
