@@ -251,7 +251,7 @@
     }
   
     /* Cart polish: visual-only; item quantities, totals and payment handlers are unchanged. */
-    #cartPanel .cart-panel {
+    #cartPanel {
       position: relative;
       overflow: hidden;
       padding: 18px;
@@ -261,7 +261,7 @@
         linear-gradient(145deg, #191727, #10101b);
       box-shadow: 0 12px 28px #00000024, inset 0 1px 0 #ffffff08;
     }
-    #cartPanel .cart-panel h2,
+    #cartPanel h2,
     #cartPanel h2 { color: #f5d779; }
     #cartItems:empty { display: none; }
     #cartItems:not(:empty) { margin-top: 10px; }
@@ -315,7 +315,7 @@
       box-shadow: 0 8px 22px #d4a94335;
     }
     @media (max-width: 380px) {
-      #cartPanel .cart-panel { padding: 14px; }
+      #cartPanel { padding: 14px; }
       #cartPanel .cart-row { gap: 7px; }
       #cartTotal { font-size: 16px; }
     }
