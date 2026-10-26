@@ -249,6 +249,77 @@
       #shopPanel > .products:first-of-type .product .star { width: 46px; height: 46px; border-radius: 15px; font-size: 27px; }
       #shopPanel > .products:first-of-type .product .price { font-size: 15px; }
     }
+  
+    /* Cart polish: visual-only; item quantities, totals and payment handlers are unchanged. */
+    #cartPanel .cart-panel {
+      position: relative;
+      overflow: hidden;
+      padding: 18px;
+      border-color: #8d6b2c;
+      background:
+        radial-gradient(ellipse at top right, #3a2b1645 0%, transparent 58%),
+        linear-gradient(145deg, #191727, #10101b);
+      box-shadow: 0 12px 28px #00000024, inset 0 1px 0 #ffffff08;
+    }
+    #cartPanel .cart-panel h2,
+    #cartPanel h2 { color: #f5d779; }
+    #cartItems:empty { display: none; }
+    #cartItems:not(:empty) { margin-top: 10px; }
+    #cartPanel .cart-row {
+      align-items: center;
+      padding: 13px 0;
+      border-bottom: 1px solid #3a3347;
+      line-height: 1.55;
+    }
+    #cartPanel .cart-row > div:first-child { flex: 1; }
+    #cartPanel .cart-row b { color: #fff4cf; }
+    #cartPanel .cart-row button {
+      min-width: 40px;
+      min-height: 40px;
+      margin: 2px 0;
+      border: 1px solid #49405e;
+      border-radius: 12px;
+      font-size: 19px;
+      font-weight: 700;
+    }
+    #cartPanel .cart-row button:hover { border-color: #d4a943; }
+    #cartTotal {
+      margin: 16px 0 12px;
+      padding: 14px;
+      border: 1px solid #6f5526;
+      border-radius: 13px;
+      background: linear-gradient(110deg, #332610, #211a27);
+      color: #f6d77d;
+      font-size: 18px;
+      font-weight: 800;
+      text-align: center;
+      letter-spacing: .15px;
+    }
+    #cartRecipient {
+      width: 100%;
+      min-height: 46px;
+      margin: 8px 0 12px;
+      padding: 12px 14px;
+      border: 1px solid #49405e;
+      background: #0d0c18;
+      color: #fff;
+    }
+    #cartRecipient::placeholder { color: #89839e; }
+    #cartPanel button[onclick*="checkoutCart"] {
+      min-height: 48px;
+      background: linear-gradient(105deg, #806022, #e0b84f);
+      color: #17121a;
+      box-shadow: 0 6px 18px #d4a94320;
+    }
+    #cartPanel button[onclick*="checkoutCart"]:hover {
+      box-shadow: 0 8px 22px #d4a94335;
+    }
+    @media (max-width: 380px) {
+      #cartPanel .cart-panel { padding: 14px; }
+      #cartPanel .cart-row { gap: 7px; }
+      #cartTotal { font-size: 16px; }
+    }
+
   </style>
 </head>
 <body>
