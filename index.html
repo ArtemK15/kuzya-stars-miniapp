@@ -1388,7 +1388,7 @@
       sbp_enabled: true, tbank_enabled: true, sber_enabled: true
     };
     function formatCardNumber(value) {
-      return String(value || "").replace(/\\D/g, "").replace(/(.{4})/g, "$1 ").trim();
+      return String(value || "").replace(/\D/g, "").replace(/(.{4})/g, "$1 ").trim();
     }
     async function loadPaymentMethods(fillAdmin = false) {
       try {
@@ -1422,8 +1422,8 @@
       const payload = {
         initData: tg.initData,
         sbp_url: document.getElementById("paymentSbpUrl").value.trim(),
-        tbank_card: document.getElementById("paymentTbankCard").value.replace(/\\D/g, ""),
-        sber_card: document.getElementById("paymentSberCard").value.replace(/\\D/g, ""),
+        tbank_card: document.getElementById("paymentTbankCard").value.replace(/\D/g, ""),
+        sber_card: document.getElementById("paymentSberCard").value.replace(/\D/g, ""),
         sbp_enabled: document.getElementById("paymentSbpEnabled").checked,
         tbank_enabled: document.getElementById("paymentTbankEnabled").checked,
         sber_enabled: document.getElementById("paymentSberEnabled").checked
