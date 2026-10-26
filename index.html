@@ -561,7 +561,9 @@
     }
 
     let adminDashboardData = null;
-    let botPostPhotoData = "";\n    let selectedAdminSticker = null;\n    let adminStickerCatalog = [];
+    let botPostPhotoData = "";
+    let selectedAdminSticker = null;
+    let adminStickerCatalog = [];
     document.addEventListener("change",async event=>{
       if(event.target?.id!=="botPostPhoto")return;
       const file=event.target.files?.[0];
