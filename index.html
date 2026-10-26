@@ -547,6 +547,13 @@
     <button onclick="saveAnnouncement()">📢 Сохранить и опубликовать</button>
     <button class="secondary" onclick="disableAnnouncement()">🗑 Снять объявление</button>
     <div id="announcementAdminStatus" class="section-subtitle" style="margin-top:10px"></div>
+    <h3>🏷️ Промокоды</h3>
+    <p class="section-subtitle">Создавай коды скидки для покупателей. Пример: KUZYA10 — скидка 10%. Неактивные коды нельзя применить.</p>
+    <div id="promoCodesAdminList" style="display:grid;gap:8px;margin:12px 0"></div>
+    <button type="button" class="secondary" onclick="addPromoCodeRow()">➕ Добавить промокод</button>
+    <button type="button" onclick="savePromoCodes()">💾 Сохранить промокоды</button>
+    <button type="button" class="secondary" onclick="loadPromoCodes(true)">🔄 Загрузить сохранённые</button>
+    <div id="promoCodesAdminStatus" class="section-subtitle" style="margin-top:10px"></div>
     <h3>⭐ Товары и цены</h3>
     <p class="section-subtitle">Меняй цену и скидку, добавляй пакеты Stars или скрывай товары. Скидка отображается на карточке товара.</p>
     <div id="shopProductsAdminList" style="display:grid;gap:10px;margin:12px 0"></div>
@@ -664,7 +671,7 @@
     <button class="secondary" onclick="cancelGiftSelection()">❌ Отменить выбор</button>
     <button class="secondary" onclick="backToGifts()">⬅️ К подаркам</button>
   </section>
-  <section class="payment" id="payment" aria-live="polite"><h2>Выбери способ оплаты</h2><div class="payment-methods"><button type="button" id="sbpMethodButton" class="payment-method active" onclick="selectPaymentMethod('sbp')">🏦 Оплата по СБП</button><button type="button" id="cardMethodButton" class="payment-method" onclick="selectPaymentMethod('card')">💳 Карта Т-Банка</button><button type="button" id="sberMethodButton" class="payment-method" onclick="selectPaymentMethod('sber')">💚 Карта Сбера</button></div><div id="sbpPaymentDetails"><h2>Оплата по СБП</h2><div class="orderline" id="orderNumber"></div><div class="orderline" id="orderAmount"></div><button onclick="openBankPayment()">🏦 Перейти к оплате в Т-Банк</button><img alt="QR-код для перевода по СБП" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAjUAAAI1AQAAAAAGbjY1AAAHBklEQVR42u2dz6orSxWHv5XE0zk46IAgglw7cMWxT2BvcOTgwJ06UvAddJjejnwJwUe4CModdoY+xe2IE4WrnYGcbunk56CqOp3sJHsfPAM5exUhJL0rX3p3ZfGr9aeqTXyM1s/4OM05znGOc5zjHOc45z6nt7EBtgZkNgPYLuLzdsnjEnqzJcDpE2u/zs5xzo0mSerYSJLUoBbpSCnVUEr1XBpgrjoLXQRQiDy8GygkdRfns0ovGlhDc+2bK6C9/Id8vJzjnDucPooguWxt2s7AtF1Q9mYLyt42HcDjEkBtksK1X2fnvArOfqZtOCpbH6yCsmObqQZ6U0eaQT53PucRsxpYPOnT+ng553VzhmvzuhdxohUWRwrpcQlz1bBd8pgriJzcvpzjnBe0UZqyJFvfPs6QgfEtAcwOW+MnA/T2i47NBnhvRZOEThecp+Ro6TY+kVT0reugc5zzIZzHEJtcwd7UhAfsgrHN9biATLbkcRldOfbhEx4ncY5zntHBk2a9B/juH0H8IRw5UsOP/kM9UM2pMn72NXw5QfwyeH+XrSUESMHUzFUDITSadPda63y8nOOcOzq45JTXsxmF1CiFZw5mC0qpylT1VoVI5gozY+c66BznPMMZqBcH3s54O0summhg9Vv+CsAP4QehHzD8E+B7B97OWZ3Z18HKbxa8OfDmMIZO7QHy39jvJQ18X/rVEg5WdnD4jlr0lwVvBvLBx8s5n3S8xUB7I29DNAXsuMu0XQzAdjHQ2yk0k8cwi2FHv87Occ4znGpMw62S+xb+Vuss9VCdffr96eXoiZ3egKmBQhP3baxv6dh0xOKWFjXmfpxznHOzRfOqMpFLbUjZWTzazKPhlQOAOmJXiPEUHa/Wj91TXKhuJBl9vJzzyXLEipR4u9sqBJb8vePUTjs2HWM8E6CQGosVngrVnhO9jPPVXEkvXQed45ybnEw2xjNzUQwgW8Mui1PNsjdbQW8hT6+dkUs7s/JunOTq0e6qFHpc1Dmvm7McX9ktTm9jhs7MtJ1rO6M4WDnAwczMFpQtj7lsCdkxmipE19Gvs3Oc8wzH1rA3SBWe2xkcrJqrAuZ6NNPfLUxJbQW5yKWt2cPl+bTXvqiGhysmP2lup875v+SsrvxO40/6PL5xvgJhfRZvASnmE9SYFPy8UJfC2Xq9Kn2OSTTUx8s5zrnSUvAjE4XUpuBHeaQIS12TQZ26t4x5Pcoj5aV9tRfGnv72cBa0OVexxvXLOa+Cs/owwFk8U6qyZKQhmUAqpS4lDXEZ+ybYbBaLOKO1ejzTOc650UK2rV/GIMp+dgQrayHDKASw/WlSvX5J1o0xF+2NWArz5Hx0NuP16+wc5zzbqufnq5uJexfsUA0Uw2mRQpnmtdVkcUOc0boOOsc5d/3BPJlVi2qTgj84UIa9kzrI0yRTUmvBuJ7aVzfRwfX0XBdpi4nuiV62Pl7Occ6L7JTRGRTFuF4vVKDNVc9VZ6qySSlMC+D1Lc5xzgvsa9MGKbTT1izF15Nuk7yDOqKjGITzXAeXE31LoNvf3vp4OedVcLJYcWmrVB8NFIp5vbK3h7R5RJWJvcXsQ3HwfW6d45z7nLl+voL+Hf07sm/sAf79mT7/TJ9/GR21Oi1YADi8A+wf0vCnUPQ16mBaxBBMNRZRN6Zmfrb7Q4jbbMZZadha1+eZznHO3XnmZTtG82xIG1MPkKV9qzsmKXhfr+cc5zzLGUjhxzXwZxB8BcYDLOHXf4PfwTylHr6A/ivWQBEPTSQuLRICKI5xfyTpfD2RTsLqOugc57ww3pLWrUc3sLHTVLQcog5W2ekWDq6DznHOB3Ou3R6x6mKJZjWtzPzxVTsNeb/kDx7jkodmcguVkCissrN67NjP7dQ5zrmng3HzpPAI4taM9S1SPS58yFK2Pvf6Fue8Ck4nOtGFo6KB9cB6BrBesAYWKd8W++mqfrXTQ6N+DZSaFFtP/Lg4JXX7co5zbrRFFKVThGS3Pj0DzLU1mA/0S7LQ+zjLW9As/9fs9vmsnv9yS8/m4+Wc18IxSPedZMbDkTp06p4WnVzRQZ6IYNzHbFJKvelOSb3JYiLXQec4574fN73PbIx/lOlGsmH1etnGpN5Gx+jEhfrM8t59Znm6qujWPjCNj5dzXi/ngaSGF219Zqch79CillREnfJ69TzWyWwuILnHW5zjnA/npP1bioHtMhZ5hs0Ex0XratDO2F3ZH+l6e3JfziiIK9dB57x6zuKDObmsPNiaWGpd9mbZxGNM9ycC7LTqwcfLOZ8mZ8x3743dXI3MZuyWEEzDrEr9qkxqID+yN4qX3Q9oIl71pb9nU4CPl3OcczveMn0PIU55jCthpUk8c9zWLIQ03Y9zjnNuN9NHwfR+nZ3jHOc4xznO+d/bfwHrkTqKA4s8wgAAAABJRU5ErkJggg=="><p>Отсканируй QR-код в банковском приложении и переведи указанную сумму. После перевода нажми «Я оплатил».</p><button onclick="markPaid()">Я оплатил</button><button class="secondary" onclick="closePayment()">Вернуться в каталог</button><p id="paymentStatus" class="orderline">Статус: ожидает подтверждения</p><p style="font-size:12px;color:#aaa">Оплата проверяется вручную. Нажатие кнопки не подтверждает поступление денег.</p></div><div id="cardPaymentDetails" style="display:none"><h2 id="cardPaymentTitle">💳 Перевод на карту Т-Банка</h2><div class="orderline" id="cardOrderNumber"></div><div class="orderline" id="cardOrderAmount"></div><div class="card-number-box"><span id="cardBankLabel">Номер карты Т-Банка</span><strong id="bankCardNumber">4377 7237 8706 3571</strong></div><button type="button" onclick="copyBankCardNumber()">📋 Скопировать номер карты</button><p style="color:#b9b7cf;font-size:13px;text-align:left">Переведи точную сумму заказа на указанную карту. После перевода нажми «Я оплатил» — оплата будет проверена вручную.</p><button onclick="markPaid()">Я оплатил</button><button class="secondary" onclick="closePayment()">Вернуться в каталог</button><p id="cardPaymentStatus" class="orderline">Статус: ожидает подтверждения</p><p style="font-size:12px;color:#aaa">Нажатие кнопки не подтверждает поступление денег.</p></div><div id="sberPaymentDetails" style="display:none"><h2>💚 Перевод на карту Сбера</h2><div class="orderline" id="sberOrderNumber"></div><div class="orderline" id="sberOrderAmount"></div><div class="card-number-box"><span>Номер карты Сбера</span><strong id="sberCardNumber">4817 7602 4879 4533</strong></div><button type="button" onclick="copySberCardNumber()">📋 Скопировать номер карты</button><p style="color:#b9b7cf;font-size:13px;text-align:left">Переведи точную сумму заказа на указанную карту. После перевода нажми «Я оплатил» — оплата будет проверена вручную.</p><button onclick="markPaid()">Я оплатил</button><button class="secondary" onclick="closePayment()">Вернуться в каталог</button><p id="sberPaymentStatus" class="orderline">Статус: ожидает подтверждения</p><p style="font-size:12px;color:#aaa">Нажатие кнопки не подтверждает поступление денег.</p></div></section>
+  <section class="payment" id="payment" aria-live="polite"><h2>Выбери способ оплаты</h2><div style="padding:12px;margin:12px 0;border:1px solid #6e5426;border-radius:12px;background:#151322"><label for="promoCodeInput" style="display:block;margin-bottom:6px;color:#f7d47a">🏷️ Промокод</label><div style="display:flex;gap:8px"><input id="promoCodeInput" maxlength="32" placeholder="Введи промокод" style="flex:1;min-width:0;padding:10px;border-radius:8px;background:#0b0b18;color:#fff;border:1px solid #6e5426"><button type="button" onclick="applyPromoCode()" style="width:auto;white-space:nowrap">Применить</button></div><div id="promoCodeStatus" class="section-subtitle" style="margin-top:6px"></div></div><div class="payment-methods"><button type="button" id="sbpMethodButton" class="payment-method active" onclick="selectPaymentMethod('sbp')">🏦 Оплата по СБП</button><button type="button" id="cardMethodButton" class="payment-method" onclick="selectPaymentMethod('card')">💳 Карта Т-Банка</button><button type="button" id="sberMethodButton" class="payment-method" onclick="selectPaymentMethod('sber')">💚 Карта Сбера</button></div><div id="sbpPaymentDetails"><h2>Оплата по СБП</h2><div class="orderline" id="orderNumber"></div><div class="orderline" id="orderAmount"></div><button onclick="openBankPayment()">🏦 Перейти к оплате в Т-Банк</button><img alt="QR-код для перевода по СБП" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAjUAAAI1AQAAAAAGbjY1AAAHBklEQVR42u2dz6orSxWHv5XE0zk46IAgglw7cMWxT2BvcOTgwJ06UvAddJjejnwJwUe4CModdoY+xe2IE4WrnYGcbunk56CqOp3sJHsfPAM5exUhJL0rX3p3ZfGr9aeqTXyM1s/4OM05znGOc5zjHOc45z6nt7EBtgZkNgPYLuLzdsnjEnqzJcDpE2u/zs5xzo0mSerYSJLUoBbpSCnVUEr1XBpgrjoLXQRQiDy8GygkdRfns0ovGlhDc+2bK6C9/Id8vJzjnDucPooguWxt2s7AtF1Q9mYLyt42HcDjEkBtksK1X2fnvArOfqZtOCpbH6yCsmObqQZ6U0eaQT53PucRsxpYPOnT+ng553VzhmvzuhdxohUWRwrpcQlz1bBd8pgriJzcvpzjnBe0UZqyJFvfPs6QgfEtAcwOW+MnA/T2i47NBnhvRZOEThecp+Ro6TY+kVT0reugc5zzIZzHEJtcwd7UhAfsgrHN9biATLbkcRldOfbhEx4ncY5zntHBk2a9B/juH0H8IRw5UsOP/kM9UM2pMn72NXw5QfwyeH+XrSUESMHUzFUDITSadPda63y8nOOcOzq45JTXsxmF1CiFZw5mC0qpylT1VoVI5gozY+c66BznPMMZqBcH3s54O0summhg9Vv+CsAP4QehHzD8E+B7B97OWZ3Z18HKbxa8OfDmMIZO7QHy39jvJQ18X/rVEg5WdnD4jlr0lwVvBvLBx8s5n3S8xUB7I29DNAXsuMu0XQzAdjHQ2yk0k8cwi2FHv87Occ4znGpMw62S+xb+Vuss9VCdffr96eXoiZ3egKmBQhP3baxv6dh0xOKWFjXmfpxznHOzRfOqMpFLbUjZWTzazKPhlQOAOmJXiPEUHa/Wj91TXKhuJBl9vJzzyXLEipR4u9sqBJb8vePUTjs2HWM8E6CQGosVngrVnhO9jPPVXEkvXQed45ybnEw2xjNzUQwgW8Mui1PNsjdbQW8hT6+dkUs7s/JunOTq0e6qFHpc1Dmvm7McX9ktTm9jhs7MtJ1rO6M4WDnAwczMFpQtj7lsCdkxmipE19Gvs3Oc8wzH1rA3SBWe2xkcrJqrAuZ6NNPfLUxJbQW5yKWt2cPl+bTXvqiGhysmP2lup875v+SsrvxO40/6PL5xvgJhfRZvASnmE9SYFPy8UJfC2Xq9Kn2OSTTUx8s5zrnSUvAjE4XUpuBHeaQIS12TQZ26t4x5Pcoj5aV9tRfGnv72cBa0OVexxvXLOa+Cs/owwFk8U6qyZKQhmUAqpS4lDXEZ+ybYbBaLOKO1ejzTOc650UK2rV/GIMp+dgQrayHDKASw/WlSvX5J1o0xF+2NWArz5Hx0NuP16+wc5zzbqufnq5uJexfsUA0Uw2mRQpnmtdVkcUOc0boOOsc5d/3BPJlVi2qTgj84UIa9kzrI0yRTUmvBuJ7aVzfRwfX0XBdpi4nuiV62Pl7Occ6L7JTRGRTFuF4vVKDNVc9VZ6qySSlMC+D1Lc5xzgvsa9MGKbTT1izF15Nuk7yDOqKjGITzXAeXE31LoNvf3vp4OedVcLJYcWmrVB8NFIp5vbK3h7R5RJWJvcXsQ3HwfW6d45z7nLl+voL+Hf07sm/sAf79mT7/TJ9/GR21Oi1YADi8A+wf0vCnUPQ16mBaxBBMNRZRN6Zmfrb7Q4jbbMZZadha1+eZznHO3XnmZTtG82xIG1MPkKV9qzsmKXhfr+cc5zzLGUjhxzXwZxB8BcYDLOHXf4PfwTylHr6A/ivWQBEPTSQuLRICKI5xfyTpfD2RTsLqOugc57ww3pLWrUc3sLHTVLQcog5W2ekWDq6DznHOB3Ou3R6x6mKJZjWtzPzxVTsNeb/kDx7jkodmcguVkCissrN67NjP7dQ5zrmng3HzpPAI4taM9S1SPS58yFK2Pvf6Fue8Ck4nOtGFo6KB9cB6BrBesAYWKd8W++mqfrXTQ6N+DZSaFFtP/Lg4JXX7co5zbrRFFKVThGS3Pj0DzLU1mA/0S7LQ+zjLW9As/9fs9vmsnv9yS8/m4+Wc18IxSPedZMbDkTp06p4WnVzRQZ6IYNzHbFJKvelOSb3JYiLXQec4574fN73PbIx/lOlGsmH1etnGpN5Gx+jEhfrM8t59Znm6qujWPjCNj5dzXi/ngaSGF219Zqch79CillREnfJ69TzWyWwuILnHW5zjnA/npP1bioHtMhZ5hs0Ex0XratDO2F3ZH+l6e3JfziiIK9dB57x6zuKDObmsPNiaWGpd9mbZxGNM9ycC7LTqwcfLOZ8mZ8x3743dXI3MZuyWEEzDrEr9qkxqID+yN4qX3Q9oIl71pb9nU4CPl3OcczveMn0PIU55jCthpUk8c9zWLIQ03Y9zjnNuN9NHwfR+nZ3jHOc4xznO+d/bfwHrkTqKA4s8wgAAAABJRU5ErkJggg=="><p>Отсканируй QR-код в банковском приложении и переведи указанную сумму. После перевода нажми «Я оплатил».</p><button onclick="markPaid()">Я оплатил</button><button class="secondary" onclick="closePayment()">Вернуться в каталог</button><p id="paymentStatus" class="orderline">Статус: ожидает подтверждения</p><p style="font-size:12px;color:#aaa">Оплата проверяется вручную. Нажатие кнопки не подтверждает поступление денег.</p></div><div id="cardPaymentDetails" style="display:none"><h2 id="cardPaymentTitle">💳 Перевод на карту Т-Банка</h2><div class="orderline" id="cardOrderNumber"></div><div class="orderline" id="cardOrderAmount"></div><div class="card-number-box"><span id="cardBankLabel">Номер карты Т-Банка</span><strong id="bankCardNumber">4377 7237 8706 3571</strong></div><button type="button" onclick="copyBankCardNumber()">📋 Скопировать номер карты</button><p style="color:#b9b7cf;font-size:13px;text-align:left">Переведи точную сумму заказа на указанную карту. После перевода нажми «Я оплатил» — оплата будет проверена вручную.</p><button onclick="markPaid()">Я оплатил</button><button class="secondary" onclick="closePayment()">Вернуться в каталог</button><p id="cardPaymentStatus" class="orderline">Статус: ожидает подтверждения</p><p style="font-size:12px;color:#aaa">Нажатие кнопки не подтверждает поступление денег.</p></div><div id="sberPaymentDetails" style="display:none"><h2>💚 Перевод на карту Сбера</h2><div class="orderline" id="sberOrderNumber"></div><div class="orderline" id="sberOrderAmount"></div><div class="card-number-box"><span>Номер карты Сбера</span><strong id="sberCardNumber">4817 7602 4879 4533</strong></div><button type="button" onclick="copySberCardNumber()">📋 Скопировать номер карты</button><p style="color:#b9b7cf;font-size:13px;text-align:left">Переведи точную сумму заказа на указанную карту. После перевода нажми «Я оплатил» — оплата будет проверена вручную.</p><button onclick="markPaid()">Я оплатил</button><button class="secondary" onclick="closePayment()">Вернуться в каталог</button><p id="sberPaymentStatus" class="orderline">Статус: ожидает подтверждения</p><p style="font-size:12px;color:#aaa">Нажатие кнопки не подтверждает поступление денег.</p></div></section>
   <div class="notice">
     💎 Выбери подходящий пакет Stars.<br>
     Оформление и оплата пока находятся в разработке.
@@ -1093,6 +1100,7 @@
         renderAdminDashboard();
         loadPaymentMethods(true);
         loadShopProducts(true);
+        loadPromoCodes(true);
         await loadBotPosts();
         const announcementResponse=await fetch(API_BASE+"/api/announcement",{cache:"no-store"});
         if(announcementResponse.ok){
@@ -1363,9 +1371,74 @@
       document.getElementById("premiumProducts").scrollIntoView({behavior:"smooth", block:"start"});
     }
 
+    let appliedPromo = null;
+    async function applyPromoCode() {
+      const input=document.getElementById("promoCodeInput");
+      const status=document.getElementById("promoCodeStatus");
+      const code=input.value.trim().toUpperCase();
+      if(!currentOrder){status.textContent="Сначала выбери товар.";return;}
+      if(!code){status.textContent="Введи промокод.";return;}
+      status.textContent="Проверяю промокод…";
+      try{
+        const url=API_BASE+"/api/promo/validate?code="+encodeURIComponent(code)+"&quantity="+currentOrder.quantity+"&price="+currentOrder.basePrice;
+        const response=await fetch(url,{cache:"no-store"});
+        const data=await response.json();
+        if(!response.ok) throw new Error(data.detail||"Промокод не принят");
+        appliedPromo={code:data.code,discount:data.discount};
+        currentOrder.price=data.price;
+        updateCurrentOrderAmounts();
+        status.textContent="✅ Промокод "+data.code+" применён: −"+data.discount+"%. Новая цена: "+data.price.toLocaleString("ru-RU")+" ₽";
+      }catch(e){appliedPromo=null;currentOrder.price=currentOrder.basePrice;updateCurrentOrderAmounts();status.textContent=e.message||"Не удалось проверить промокод.";}
+    }
+    function updateCurrentOrderAmounts() {
+      if(!currentOrder)return;
+      const text="К оплате: "+currentOrder.price.toLocaleString("ru-RU")+" ₽ за "+currentOrder.quantity+" Stars";
+      ["orderAmount","cardOrderAmount","sberOrderAmount"].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=text;});
+    }
+    function addPromoCodeRow(code="",discount=10,active=true) {
+      const host=document.getElementById("promoCodesAdminList");
+      const row=document.createElement("div");
+      row.dataset.promoRow="1";
+      row.style.cssText="padding:10px;border:1px solid #6e5426;border-radius:10px;background:#151322;display:grid;grid-template-columns:1fr 90px;gap:8px";
+      row.innerHTML='<label style="font-size:12px;color:#c6bddc">Код<input data-promo-field="code" maxlength="32" value="" placeholder="KUZYA10" style="width:100%;padding:9px;background:#0b0b18;color:white;border:1px solid #6e5426;border-radius:8px"></label><label style="font-size:12px;color:#c6bddc">Скидка %<input data-promo-field="discount" type="number" min="1" max="90" value="'+Number(discount)+'" style="width:100%;padding:9px;background:#0b0b18;color:white;border:1px solid #6e5426;border-radius:8px"></label><label style="display:flex;align-items:center;gap:7px;color:#ddd6ff;font-size:12px;grid-column:1/-1"><input data-promo-field="active" type="checkbox" '+(active?'checked':'')+' style="width:auto"> Активен</label><button type="button" class="secondary" data-remove-promo style="grid-column:1/-1">🗑 Удалить</button>';
+      row.querySelector('[data-promo-field="code"]').value=code;
+      row.querySelector("[data-remove-promo]").onclick=()=>row.remove();
+      host.appendChild(row);
+    }
+    async function loadPromoCodes(fillAdmin=true) {
+      const status=document.getElementById("promoCodesAdminStatus");
+      if(!tg?.initData){if(status)status.textContent="Открой Mini App в Telegram под аккаунтом администратора.";return;}
+      try{
+        const response=await fetch(API_BASE+"/api/admin/promo-codes?initData="+encodeURIComponent(tg.initData),{cache:"no-store"});
+        const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось загрузить промокоды");
+        if(fillAdmin){document.getElementById("promoCodesAdminList").textContent="";data.codes.forEach(c=>addPromoCodeRow(c.code,c.discount,c.active));}
+        if(status)status.textContent=data.codes.length?"Загружено промокодов: "+data.codes.length:"Пока нет промокодов. Добавь первый.";
+      }catch(e){if(status)status.textContent=e.message||"Ошибка загрузки промокодов.";}
+    }
+    async function savePromoCodes() {
+      const status=document.getElementById("promoCodesAdminStatus");
+      if(!tg?.initData){status.textContent="Открой Mini App в Telegram под аккаунтом администратора.";return;}
+      const codes=Array.from(document.querySelectorAll("#promoCodesAdminList [data-promo-row]")).map(row=>({
+        code:row.querySelector('[data-promo-field="code"]').value.trim().toUpperCase(),
+        discount:Number(row.querySelector('[data-promo-field="discount"]').value),
+        active:row.querySelector('[data-promo-field="active"]').checked
+      }));
+      status.textContent="Сохраняю промокоды…";
+      try{
+        const response=await fetch(API_BASE+"/api/admin/promo-codes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,codes})});
+        const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось сохранить промокоды");
+        document.getElementById("promoCodesAdminList").textContent="";
+        data.codes.forEach(c=>addPromoCodeRow(c.code,c.discount,c.active));
+        status.textContent="✅ Сохранено промокодов: "+data.codes.length;
+      }catch(e){status.textContent=e.message||"Ошибка сохранения.";}
+    }
+
     function selectProduct(quantity, price) {
       const orderId = "KZ-" + Date.now().toString().slice(-8);
-      currentOrder = { orderId, quantity, price };
+      currentOrder = { orderId, quantity, price, basePrice: price };
+      appliedPromo = null;
+      const promoInput = document.getElementById("promoCodeInput"); if (promoInput) promoInput.value = "";
+      const promoStatus = document.getElementById("promoCodeStatus"); if (promoStatus) promoStatus.textContent = "";
       document.getElementById("orderNumber").textContent = "Заказ: " + orderId;
       document.getElementById("orderAmount").textContent = "К оплате: " + price + " ₽ за " + quantity + " Stars";
       document.getElementById("paymentStatus").textContent = "Статус: ожидает подтверждения";
