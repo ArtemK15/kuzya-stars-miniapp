@@ -663,7 +663,7 @@
     <label for="giftRecipient" style="display:block;text-align:left;margin:14px 0 6px;color:#ddd6ff">Username получателя в Telegram</label>
     <input id="giftRecipient" autocomplete="off" placeholder="@username" style="width:100%;padding:13px;border-radius:10px;border:1px solid #6d4bc3;background:#0b0b18;color:#fff;font-size:15px">
     <p style="font-size:12px;color:#aaa;line-height:1.5">Оплата откроется в Telegram Stars (XTR). После успешной оплаты заказ появится у владельца; подарок отправляется вручную.</p>
-    <button onclick="addGiftToCart(selectedGift.name,selectedGift.price,selectedGift.stock)">🛒 Добавить в корзину</button><button id="payGiftButton" onclick="payForGift()">⭐ Оплатить через Telegram Stars</button>
+    <button onclick="addGiftToCart(selectedGift.name,selectedGift.price,selectedGift.stock)">🛒 Добавить в корзину</button><button id="payGiftButton" onclick="payForGift()">⭐ Оплатить через Telegram Stars</button><button type="button" onclick="createGiftCardOrder('tbank')">💳 Оплатить картой Т-Банка</button><button type="button" onclick="createGiftCardOrder('sber')">💚 Оплатить картой Сбера</button><div id="giftCardPaymentResult" style="display:none;margin-top:10px"><div class="orderline" id="giftCardOrderInfo"></div><div class="card-number-box"><span id="giftCardBankLabel">Номер карты</span><strong id="giftCardNumber"></strong></div><button type="button" onclick="copyGiftCardNumber()">📋 Скопировать номер карты</button><p style="font-size:12px;color:#aaa;line-height:1.5">Переведи точную сумму в рублях. После перевода напиши в поддержку или дождись ручного подтверждения заказа.</p></div>
     <button class="secondary" onclick="cancelGiftSelection()">❌ Отменить выбор</button>
     <button class="secondary" onclick="backToGifts()">⬅️ К подаркам</button>
   </section>
@@ -1212,6 +1212,33 @@
       document.getElementById("giftCheckout").style.display = "block";
       document.getElementById("giftCheckout").scrollIntoView({behavior:"smooth", block:"start"});
     }
+    async function createGiftCardOrder(bank) {
+      if (!selectedGift) { alert("Сначала выбери подарок."); return; }
+      if (!tg?.initData) { alert("Открой магазин внутри Telegram."); return; }
+      const recipient=document.getElementById("giftRecipient").value.trim();
+      if (!/^@?[A-Za-z0-9_]{5,32}$/.test(recipient)) { alert("Введи корректный Telegram username получателя."); return; }
+      const result=document.getElementById("giftCardPaymentResult");
+      result.style.display="block";
+      document.getElementById("giftCardOrderInfo").textContent="Создаём заказ и загружаем реквизиты…";
+      try {
+        const response=await fetch(API_BASE+"/api/gifts/card-order",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,gift_name:selectedGift.name,recipient,bank})});
+        const data=await response.json();
+        if(!response.ok) throw new Error(data.detail||"Не удалось создать заказ");
+        const methods=await (await fetch(API_BASE+"/api/payment-methods",{cache:"no-store"})).json();
+        const number=bank==="sber"?methods.sber_card:methods.tbank_card;
+        document.getElementById("giftCardBankLabel").textContent=bank==="sber"?"Номер карты Сбера":"Номер карты Т-Банка";
+        document.getElementById("giftCardNumber").textContent=formatCardNumber(number);
+        document.getElementById("giftCardOrderInfo").textContent="Заказ №"+data.order_id+" · "+selectedGift.name+" · "+data.price_rub+" ₽ · ожидает оплаты";
+        result.dataset.cardNumber=number;
+        result.scrollIntoView({behavior:"smooth",block:"nearest"});
+      } catch(e) {
+        document.getElementById("giftCardOrderInfo").textContent=e.message||"Ошибка создания заказа";
+      }
+    }
+    async function copyGiftCardNumber() {
+      const number=document.getElementById("giftCardPaymentResult").dataset.cardNumber||"";
+      await copyCardNumber(number,formatCardNumber(number),document.getElementById("giftCardBankLabel").textContent.includes("Сбера")?"Сбера":"Т-Банка");
+    }
     async function payForGift() {
       if (invoiceBusy) return;
       if (!tg || !tg.initData || !tg.openInvoice) {
@@ -1483,7 +1510,7 @@
     }
     function renderCatalogPricingAdmin() {
       const host=document.getElementById("catalogPricingAdminList"); if(!host)return;
-      host.innerHTML='<h4 style="color:#f4cc67;margin:4px 0">💎 Premium — базовая цена в ₽</h4>'+catalogPricing.premium.map((p,i)=>'<div data-catalog-kind="premium" data-catalog-index="'+i+'" style="padding:10px;border:1px solid #6e5426;border-radius:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px"><label>Месяцев<input data-field="months" type="number" min="3" max="12" value="'+Number(p.months)+'" disabled style="width:100%"></label><label>Цена без скидки, ₽<input data-field="price" type="number" min="1" value="'+Number(p.price)+'" style="width:100%"></label><label>Скидка, %<input data-field="discount_percent" type="number" min="0" max="90" value="'+Number(p.discount_percent ?? catalogPricing.premium_discount_percent ?? 0)+'" style="width:100%"></label><label style="grid-column:1/-1"><input data-field="active" type="checkbox" '+(p.active!==false?'checked':'')+' style="width:auto"> Показывать тариф</label></div>').join("")+'<h4 style="color:#f4cc67;margin:8px 0 4px">🎁 Подарки — цена в XTR</h4>'+catalogPricing.gifts.map((g,i)=>'<div data-catalog-kind="gift" data-catalog-index="'+i+'" style="padding:10px;border:1px solid #6e5426;border-radius:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px"><label>Название<input data-field="name" value="'+escapeHtml(g.name)+'" disabled style="width:100%"></label><label>Цена без скидки, XTR<input data-field="price" type="number" min="1" value="'+Number(g.price)+'" style="width:100%"></label><label>Скидка, %<input data-field="discount_percent" type="number" min="0" max="90" value="'+Number(g.discount_percent ?? catalogPricing.gifts_discount_percent ?? 0)+'" style="width:100%"></label><label>Остаток, шт.<input data-field="stock" type="number" min="0" value="'+Number(g.stock)+'" style="width:100%"></label><label style="display:flex;align-items:center;gap:6px"><input data-field="active" type="checkbox" '+(g.active!==false?'checked':'')+' style="width:auto"> Активен</label></div>').join("");
+      host.innerHTML='<h4 style="color:#f4cc67;margin:4px 0">💎 Premium — базовая цена в ₽</h4>'+catalogPricing.premium.map((p,i)=>'<div data-catalog-kind="premium" data-catalog-index="'+i+'" style="padding:10px;border:1px solid #6e5426;border-radius:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px"><label>Месяцев<input data-field="months" type="number" min="3" max="12" value="'+Number(p.months)+'" disabled style="width:100%"></label><label>Цена без скидки, ₽<input data-field="price" type="number" min="1" value="'+Number(p.price)+'" style="width:100%"></label><label>Скидка, %<input data-field="discount_percent" type="number" min="0" max="90" value="'+Number(p.discount_percent ?? catalogPricing.premium_discount_percent ?? 0)+'" style="width:100%"></label><label style="grid-column:1/-1"><input data-field="active" type="checkbox" '+(p.active!==false?'checked':'')+' style="width:auto"> Показывать тариф</label></div>').join("")+'<h4 style="color:#f4cc67;margin:8px 0 4px">🎁 Подарки — XTR и цена для оплаты картой</h4>'+catalogPricing.gifts.map((g,i)=>'<div data-catalog-kind="gift" data-catalog-index="'+i+'" style="padding:10px;border:1px solid #6e5426;border-radius:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px"><label>Название<input data-field="name" value="'+escapeHtml(g.name)+'" disabled style="width:100%"></label><label>Цена без скидки, XTR<input data-field="price" type="number" min="1" value="'+Number(g.price)+'" style="width:100%"></label><label>Цена для оплаты картой, ₽<input data-field="card_price_rub" type="number" min="1" value="'+Number(g.card_price_rub||0)+'" style="width:100%"></label><label>Скидка XTR, %<input data-field="discount_percent" type="number" min="0" max="90" value="'+Number(g.discount_percent ?? catalogPricing.gifts_discount_percent ?? 0)+'" style="width:100%"></label><label>Остаток, шт.<input data-field="stock" type="number" min="0" value="'+Number(g.stock)+'" style="width:100%"></label><label style="display:flex;align-items:center;gap:6px"><input data-field="active" type="checkbox" '+(g.active!==false?'checked':'')+' style="width:auto"> Активен</label></div>').join("");
     }
     function syncCatalogPricingInputs() {
       catalogPricing.premium_discount_percent=Number(document.getElementById("premiumDiscountPercent")?.value ?? catalogPricing.premium_discount_percent ?? 0);
