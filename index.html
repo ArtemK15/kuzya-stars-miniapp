@@ -1453,10 +1453,33 @@
     function discountedCatalogPrice(price, percent) { return Math.max(1, Math.round(Number(price) * (100 - Number(percent || 0)) / 100)); }
     function renderCatalogPricing() {
       const premiumHost=document.getElementById("premiumProducts");
-      if(premiumHost) premiumHost.innerHTML=catalogPricing.premium.filter(p=>p.active!==false).map(p=>{const old=Number(p.price),pct=Number(p.discount_percent ?? catalogPricing.premium_discount_percent ?? 0),price=discountedCatalogPrice(old,pct);return '<div class="premium-card"><div class="gift-icon">💎</div><div class="gift-name">'+Number(p.months)+' месяцев</div>'+(pct?'<div class="premium-old">'+old.toLocaleString("ru-RU")+' ₽</div>':'')+'<div class="premium-price">'+price.toLocaleString("ru-RU")+' ₽'+(pct?' <small style="color:#7df0b0">−'+pct+'%</small>':'')+'</div><button onclick="selectPremium('+Number(p.months)+','+price+')">Выбрать</button></div>';}).join("")||'<div class="section-subtitle">Тарифы временно недоступны.</div>';
+      if(premiumHost) premiumHost.innerHTML=catalogPricing.premium.filter(p=>p.active!==false).map(p=>{const old=Number(p.price),pct=Number(p.discount_percent ?? catalogPricing.premium_discount_percent ?? 0),price=discountedCatalogPrice(old,pct);return '<div class="premium-card"><div class="gift-icon">💎</div><div class="gift-name">'+Number(p.months)+' месяцев</div>'+(pct?'<div class="premium-old">'+old.toLocaleString("ru-RU")+' ₽</div>':'')+'<div class="premium-price">'+price.toLocaleString("ru-RU")+' ₽'+(pct?' <small style="color:#7df0b0">−'+pct+'%</small>':'')+'</div><button type="button" data-action="select-premium" data-months="'+Number(p.months)+'" data-price="'+price+'">Выбрать</button></div>';}).join("")||'<div class="section-subtitle">Тарифы временно недоступны.</div>';
       const icons={"Мишка":"🧸","Ракета":"🚀","Кольцо":"💍","Бриллиант/тортик":"💎","Кольцо(2х)/Шампанское":"🥂"};
       const giftHost=document.getElementById("giftProducts");
-      if(giftHost) giftHost.innerHTML=catalogPricing.gifts.filter(g=>g.active!==false).map(g=>{const old=Number(g.price),pct=Number(g.discount_percent ?? catalogPricing.gifts_discount_percent ?? 0),price=discountedCatalogPrice(old,pct);return '<div class="gift-card"><div class="gift-icon">'+(icons[g.name]||"🎁")+'</div><div class="gift-name">'+escapeHtml(g.name)+'</div>'+(pct?'<div style="font-size:11px;color:#aaa;text-decoration:line-through">'+old+' XTR</div>':'')+'<div class="gift-price">'+price+' XTR'+(pct?' <small style="color:#7df0b0">−'+pct+'%</small>':'')+'</div><div class="gift-stock">Доступно: '+Number(g.stock)+' шт.</div><button onclick="selectGift('+JSON.stringify(g.name)+','+price+','+Number(g.stock)+')">Выбрать</button></div>';}).join("")||'<div class="section-subtitle">Подарки временно недоступны.</div>';
+      if(giftHost) giftHost.innerHTML=catalogPricing.gifts.filter(g=>g.active!==false).map(g=>{const old=Number(g.price),pct=Number(g.discount_percent ?? catalogPricing.gifts_discount_percent ?? 0),price=discountedCatalogPrice(old,pct);return '<div class="gift-card"><div class="gift-icon">'+(icons[g.name]||"🎁")+'</div><div class="gift-name">'+escapeHtml(g.name)+'</div>'+(pct?'<div style="font-size:11px;color:#aaa;text-decoration:line-through">'+old+' XTR</div>':'')+'<div class="gift-price">'+price+' XTR'+(pct?' <small style="color:#7df0b0">−'+pct+'%</small>':'')+'</div><div class="gift-stock">Доступно: '+Number(g.stock)+' шт.</div><button type="button" data-action="select-gift" data-name="'+escapeHtml(g.name)+'" data-price="'+price+'" data-stock="'+Number(g.stock)+'">Выбрать</button></div>';}).join("")||'<div class="section-subtitle">Подарки временно недоступны.</div>';
+    }
+    function bindCatalogSelectionButtons() {
+      const giftHost=document.getElementById("giftProducts");
+      const premiumHost=document.getElementById("premiumProducts");
+      if(giftHost && !giftHost.dataset.selectionBound) {
+        giftHost.dataset.selectionBound="1";
+        giftHost.addEventListener("click", event => {
+          const button=event.target.closest('button[data-action="select-gift"]');
+          if(!button)return;
+          event.preventDefault();
+          selectGift(button.dataset.name, Number(button.dataset.price), Number(button.dataset.stock));
+        });
+      }
+      if(premiumHost && !premiumHost.dataset.selectionBound) {
+        premiumHost.dataset.selectionBound="1";
+        premiumHost.addEventListener("click", event => {
+          const button=event.target.closest('button[data-action="select-premium"]');
+          if(!button)return;
+          event.preventDefault();
+          selectPremium(Number(button.dataset.months), Number(button.dataset.price));
+        });
+      }
+      bindCatalogSelectionButtons();
     }
     function renderCatalogPricingAdmin() {
       const host=document.getElementById("catalogPricingAdminList"); if(!host)return;
