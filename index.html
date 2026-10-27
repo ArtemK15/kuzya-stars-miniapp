@@ -1457,6 +1457,7 @@
       const icons={"Мишка":"🧸","Ракета":"🚀","Кольцо":"💍","Бриллиант/тортик":"💎","Кольцо(2х)/Шампанское":"🥂"};
       const giftHost=document.getElementById("giftProducts");
       if(giftHost) giftHost.innerHTML=catalogPricing.gifts.filter(g=>g.active!==false).map(g=>{const old=Number(g.price),pct=Number(g.discount_percent ?? catalogPricing.gifts_discount_percent ?? 0),price=discountedCatalogPrice(old,pct);return '<div class="gift-card"><div class="gift-icon">'+(icons[g.name]||"🎁")+'</div><div class="gift-name">'+escapeHtml(g.name)+'</div>'+(pct?'<div style="font-size:11px;color:#aaa;text-decoration:line-through">'+old+' XTR</div>':'')+'<div class="gift-price">'+price+' XTR'+(pct?' <small style="color:#7df0b0">−'+pct+'%</small>':'')+'</div><div class="gift-stock">Доступно: '+Number(g.stock)+' шт.</div><button type="button" data-action="select-gift" data-name="'+escapeHtml(g.name)+'" data-price="'+price+'" data-stock="'+Number(g.stock)+'">Выбрать</button></div>';}).join("")||'<div class="section-subtitle">Подарки временно недоступны.</div>';
+      bindCatalogSelectionButtons();
     }
     function bindCatalogSelectionButtons() {
       const giftHost=document.getElementById("giftProducts");
@@ -1479,7 +1480,6 @@
           selectPremium(Number(button.dataset.months), Number(button.dataset.price));
         });
       }
-      bindCatalogSelectionButtons();
     }
     function renderCatalogPricingAdmin() {
       const host=document.getElementById("catalogPricingAdminList"); if(!host)return;
