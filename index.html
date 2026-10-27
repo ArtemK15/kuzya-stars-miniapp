@@ -575,9 +575,12 @@
     <input id="paymentTbankCard" inputmode="numeric" maxlength="23" placeholder="Номер карты Т-Банка" style="width:100%;padding:12px;background:#0b0b18;color:#fff;border:1px solid #6e5426;margin-bottom:8px">
     <label for="paymentSberCard" style="display:block;margin:10px 0 6px">Номер карты Сбера</label>
     <input id="paymentSberCard" inputmode="numeric" maxlength="23" placeholder="Номер карты Сбера" style="width:100%;padding:12px;background:#0b0b18;color:#fff;border:1px solid #6e5426;margin-bottom:8px">
+    <label for="paymentPhone" style="display:block;margin:10px 0 6px">Оплата по номеру телефона</label>
+    <input id="paymentPhone" type="tel" inputmode="tel" maxlength="30" placeholder="+7 900 123-45-67" style="width:100%;padding:12px;background:#0b0b18;color:#fff;border:1px solid #6e5426;margin-bottom:8px">
     <label style="display:flex;align-items:center;gap:8px;margin:10px 0;color:#ddd6ff"><input id="paymentSbpEnabled" type="checkbox" checked style="width:auto"> Включить оплату по СБП</label>
     <label style="display:flex;align-items:center;gap:8px;margin:10px 0;color:#ddd6ff"><input id="paymentTbankEnabled" type="checkbox" checked style="width:auto"> Включить карту Т-Банка</label>
     <label style="display:flex;align-items:center;gap:8px;margin:10px 0;color:#ddd6ff"><input id="paymentSberEnabled" type="checkbox" checked style="width:auto"> Включить карту Сбера</label>
+    <label style="display:flex;align-items:center;gap:8px;margin:10px 0;color:#ddd6ff"><input id="paymentPhoneEnabled" type="checkbox" style="width:auto"> Включить оплату по номеру телефона</label>
     <button onclick="savePaymentMethods()">💾 Сохранить способы оплаты</button>
     <button class="secondary" onclick="loadPaymentMethods(true)">🔄 Загрузить текущие настройки</button>
     <div id="paymentMethodsAdminStatus" class="section-subtitle" style="margin-top:10px"></div>
@@ -1594,7 +1597,7 @@
     let paymentMethodsConfig = {
       sbp_url: "https://www.tbank-online.com/rm/r_WZlztaRLrZ.hhcTUJjdlP/gINWL2608",
       tbank_card: "4377723787063571",
-      sber_card: "4817760248794533",
+      sber_card: "4817760248794533", phone_number: "", phone_enabled: false,
       sbp_enabled: true, tbank_enabled: true, sber_enabled: true
     };
     function formatCardNumber(value) {
@@ -1615,6 +1618,8 @@
           document.getElementById("paymentSbpUrl").value = paymentMethodsConfig.sbp_url || "";
           document.getElementById("paymentTbankCard").value = formatCardNumber(paymentMethodsConfig.tbank_card);
           document.getElementById("paymentSberCard").value = formatCardNumber(paymentMethodsConfig.sber_card);
+          document.getElementById("paymentPhone").value = paymentMethodsConfig.phone_number || "";
+          document.getElementById("paymentPhoneEnabled").checked = !!paymentMethodsConfig.phone_enabled;
           document.getElementById("paymentSbpEnabled").checked = !!paymentMethodsConfig.sbp_enabled;
           document.getElementById("paymentTbankEnabled").checked = !!paymentMethodsConfig.tbank_enabled;
           document.getElementById("paymentSberEnabled").checked = !!paymentMethodsConfig.sber_enabled;
@@ -1634,6 +1639,8 @@
         sbp_url: document.getElementById("paymentSbpUrl").value.trim(),
         tbank_card: document.getElementById("paymentTbankCard").value.replace(/\D/g, ""),
         sber_card: document.getElementById("paymentSberCard").value.replace(/\D/g, ""),
+        phone_number: document.getElementById("paymentPhone").value.trim(),
+        phone_enabled: document.getElementById("paymentPhoneEnabled").checked,
         sbp_enabled: document.getElementById("paymentSbpEnabled").checked,
         tbank_enabled: document.getElementById("paymentTbankEnabled").checked,
         sber_enabled: document.getElementById("paymentSberEnabled").checked
