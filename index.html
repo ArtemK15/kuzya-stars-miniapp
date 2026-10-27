@@ -1482,7 +1482,7 @@
       if(!tg?.initData){status.textContent="Открой Mini App в Telegram под аккаунтом администратора.";return;}
       syncCatalogPricingInputs();status.textContent="Сохраняю цены…";
       try{
-        const response=await fetch(API_BASE+"/api/admin/catalog-pricing",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,premium:catalogPricing.premium,gifts:catalogPricing.gifts})});
+        const response=await fetch(API_BASE+"/api/admin/catalog-pricing",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,premium:catalogPricing.premium,gifts:catalogPricing.gifts,premium_discount_percent:catalogPricing.premium_discount_percent,gifts_discount_percent:catalogPricing.gifts_discount_percent})});
         const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось сохранить цены");
         catalogPricing={premium:data.premium,gifts:data.gifts,premium_discount_percent:Number(data.premium_discount_percent||0),gifts_discount_percent:Number(data.gifts_discount_percent||0)};renderCatalogPricing();renderCatalogPricingAdmin();status.textContent="✅ Цены и скидки Premium/подарков сохранены.";
       }catch(e){status.textContent=e.message||"Ошибка сохранения";}
