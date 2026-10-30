@@ -813,7 +813,7 @@
         }else{
           html+='<div class="orderline">Реквизиты для перевода<br>'+(p.tbank_enabled&&p.tbank_card?'Т-Банк: <b>'+escapeHtml(p.tbank_card)+'</b><br>':'')+(p.sber_enabled&&p.sber_card?'Сбер: <b>'+escapeHtml(p.sber_card)+'</b>':'')+(!(p.tbank_enabled&&p.tbank_card)&&!(p.sber_enabled&&p.sber_card)?'Реквизиты карт не настроены.':'')+'</div>';
         }
-        html+='<p class="section-subtitle">Не отправляй пароль Steam или код Steam Guard. После перевода укажи номер заказа поддержке.</p>';
+        html+='<p class="section-subtitle">После перевода нажми «Оплатил». Пароль Steam и код Steam Guard не нужны.</p><button type="button" id="steamPaidButton" onclick="claimSteamPayment('+data.order_id+')">✅ Оплатил</button><div id="steamPaidStatus" class="section-subtitle"></div>';
         details.innerHTML=html;details.style.display="block";
       }catch(e){status.textContent=e.message||"Ошибка создания заказа.";}
     }
@@ -828,6 +828,22 @@
         button.textContent="✓ Об оплате сообщено";
         button.style.display="none";
       }catch(e){status.textContent=e.message||"Ошибка отправки";button.disabled=false;}
+    }
+    async function claimSteamPayment(orderId){
+      const button=document.getElementById("steamPaidButton");
+      const status=document.getElementById("steamPaidStatus");
+      button.disabled=true;
+      status.textContent="Отправляю уведомление…";
+      try {
+        const response=await fetch(API_BASE+"/api/steam/paid",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,order_id:orderId})});
+        const data=await response.json();
+        if(!response.ok) throw new Error(data.detail||"Ошибка отправки");
+        button.textContent="⏳ Проверка оплаты";
+        status.textContent="Уведомление отправлено. Оплата будет проверена вручную.";
+      } catch(e) {
+        button.disabled=false;
+        status.textContent=e.message||"Ошибка отправки";
+      }
     }
     async function loadSteamAdminOrders(){
       const host=document.getElementById("steamAdminOrders"),status=document.getElementById("steamAdminStatus");
