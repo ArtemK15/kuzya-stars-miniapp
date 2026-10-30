@@ -1820,8 +1820,8 @@
     function openBankPayment() {
       window.open(paymentMethodsConfig.sbp_url || "https://www.tbank-online.com/rm/r_WZlztaRLrZ.hhcTUJjdlP/gINWL2608", "_blank", "noopener,noreferrer");
     }
-    function markPaid() {
-      if (!currentOrder) return;
+    async function markPaid() {
+      if (!currentOrder || currentOrder.paymentBusy || currentOrder.paymentReported) return;
       const recipientInput=document.getElementById("starsRecipient");
       const recipientStatus=document.getElementById("starsRecipientStatus");
       const recipient=(recipientInput?.value||"").trim().replace(/^@/,"");
@@ -1830,17 +1830,52 @@
         recipientInput?.focus();
         return;
       }
+      if (!tg?.initData) {
+        if(recipientStatus)recipientStatus.textContent="Открой Mini App внутри Telegram, чтобы отправить заказ.";
+        return;
+      }
       currentOrder.recipient=recipient;
-      if(recipientStatus)recipientStatus.textContent="";
-      const paymentStatus=document.getElementById("paymentStatus");
-      const cardStatus=document.getElementById("cardPaymentStatus");
-      const sberStatus=document.getElementById("sberPaymentStatus");
-      const statusText="Заявка отмечена на этом экране. Оплата ещё не подтверждена — дождись ручной проверки. Номер заказа: "+currentOrder.orderId+". Получатель: @"+recipient+".";
-      if(paymentStatus)paymentStatus.textContent=statusText;
-      if(cardStatus)cardStatus.textContent=statusText;
-      if(sberStatus)sberStatus.textContent=statusText;
+      currentOrder.paymentBusy=true;
       const paidButtons=document.querySelectorAll('#payment button[onclick="markPaid()"]');
-      paidButtons.forEach(button=>{button.disabled=true;button.textContent="Заявка отмечена";button.style.opacity="0.65";button.style.cursor="default";});
+      paidButtons.forEach(button=>{button.disabled=true;button.textContent="Отправляем заявку…";});
+      const setStatus=(message)=>["paymentStatus","cardPaymentStatus","sberPaymentStatus"].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=message;});
+      try {
+        if (!currentOrder.serverOrderId) {
+          const createResponse=await fetch(API_BASE+"/api/stars/orders",{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({
+              initData:tg.initData,
+              quantity:Number(currentOrder.quantity),
+              recipient,
+              promo_code:appliedPromo?.code||""
+            })
+          });
+          const created=await createResponse.json();
+          if(!createResponse.ok)throw new Error(created.detail||"Не удалось создать заказ Stars.");
+          currentOrder.serverOrderId=created.order_id;
+          currentOrder.orderId="KZ-"+String(created.order_id).padStart(8,"0");
+          currentOrder.price=Number(created.price);
+          ["orderNumber","cardOrderNumber","sberOrderNumber"].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent="Заказ: "+currentOrder.orderId;});
+          updateCurrentOrderAmounts();
+        }
+        const reportResponse=await fetch(API_BASE+"/api/stars/payment-reported",{
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({initData:tg.initData,order_id:Number(currentOrder.serverOrderId)})
+        });
+        const report=await reportResponse.json();
+        if(!reportResponse.ok)throw new Error(report.detail||"Не удалось отправить уведомление об оплате.");
+        currentOrder.paymentReported=true;
+        const statusText="Заявка отправлена администратору. Оплата ещё не подтверждена — ожидает ручной проверки. Заказ: "+currentOrder.orderId+". Получатель: @"+recipient+".";
+        setStatus(statusText);
+        paidButtons.forEach(button=>{button.disabled=true;button.textContent="Заявка отправлена";button.style.opacity="0.65";button.style.cursor="default";});
+      } catch(error) {
+        setStatus("Не удалось отправить заявку: "+(error.message||"ошибка соединения")+". Нажми кнопку ещё раз.");
+        paidButtons.forEach(button=>{button.disabled=false;button.textContent="Я оплатил";});
+      } finally {
+        currentOrder.paymentBusy=false;
+      }
     }
     function closePayment() {
       document.getElementById("payment").style.display = "none";
