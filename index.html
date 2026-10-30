@@ -580,6 +580,11 @@
     <button type="button" class="secondary" onclick="loadStarsAdminOrders()">🔄 Обновить Stars-заказы</button>
     <div id="starsAdminStatus" class="section-subtitle" style="margin-top:8px"></div>
     <div id="starsAdminOrders" style="display:grid;gap:10px;margin:12px 0"></div>
+    <h3>💎 Заказы Telegram Premium</h3>
+    <p class="section-subtitle">Срок подписки, получатель, сумма, заявки об оплате и выдача Premium.</p>
+    <button type="button" class="secondary" onclick="loadPremiumAdminOrders()">🔄 Обновить Premium-заказы</button>
+    <div id="premiumAdminStatus" class="section-subtitle" style="margin-top:8px"></div>
+    <div id="premiumAdminOrders" style="display:grid;gap:10px;margin:12px 0"></div>
     <h3>🎮 Заказы на пополнение Steam</h3>
     <p class="section-subtitle">Отдельный список Steam-заказов. Проверяй оплату вручную и обновляй статус после выполнения.</p>
     <button type="button" class="secondary" onclick="loadSteamAdminOrders()">🔄 Обновить Steam-заказы</button>
@@ -834,6 +839,40 @@
         button.style.display="none";
       }catch(e){status.textContent=e.message||"Ошибка отправки";button.disabled=false;}
     }
+    async function loadPremiumAdminOrders(){
+      const host=document.getElementById("premiumAdminOrders"),status=document.getElementById("premiumAdminStatus");
+      if(!tg?.initData){status.textContent="Открой Mini App в Telegram под аккаунтом администратора.";return;}
+      status.textContent="Загружаю Premium-заказы…";
+      try{
+        const response=await fetch(API_BASE+"/api/admin/premium/orders?initData="+encodeURIComponent(tg.initData),{cache:"no-store"});
+        const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось загрузить Premium-заказы");
+        const orders=data.orders||[];
+        const reported=orders.filter(o=>o.status==="Покупатель сообщил об оплате").length;
+        status.textContent="Всего заказов: "+orders.length+" · заявок об оплате: "+reported;
+        host.innerHTML=orders.length?orders.map(o=>{
+          const when=o.created_at?new Date(o.created_at+"Z").toLocaleString():"";
+          const actions=["Ожидает оплаты","Покупатель сообщил об оплате","Оплачен","Заказ выдан","Выполнен","Отменён"];
+          return '<div style="padding:13px;border:1px solid '+(o.status==="Покупатель сообщил об оплате"?"#d7a93b":"#6e5426")+';border-radius:13px;background:#151322">'+
+            '<b>💎 Premium-заказ #'+o.id+'</b><br>'+
+            'Покупатель: '+(o.username?"@"+escapeHtml(o.username):"без username")+' · ID '+o.user_id+'<br>'+
+            'Получатель: <b>@'+escapeHtml(o.recipient)+'</b><br>'+
+            'Подписка: <b>'+Number(o.months)+' месяцев</b> · Сумма: <b>'+Number(o.price).toLocaleString("ru-RU")+' ₽</b><br>'+
+            'Статус: <b>'+escapeHtml(o.status)+'</b><br><small>'+escapeHtml(when)+'</small>'+
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px">'+
+            actions.map(st=>'<button type="button" class="secondary" '+(st===o.status?'disabled style="opacity:.5"':'')+' onclick="setPremiumOrderStatus('+o.id+',\''+st+'\')">'+st+'</button>').join("")+
+            '</div></div>';
+        }).join(""):'<div class="section-subtitle">Premium-заказов пока нет.</div>';
+      }catch(e){status.textContent=e.message||"Ошибка загрузки Premium-заказов.";}
+    }
+    async function setPremiumOrderStatus(orderId,statusValue){
+      const status=document.getElementById("premiumAdminStatus");status.textContent="Обновляю Premium-заказ…";
+      try{
+        const response=await fetch(API_BASE+"/api/admin/premium/status",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,order_id:orderId,status:statusValue})});
+        const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось изменить статус");
+        await loadPremiumAdminOrders();
+      }catch(e){status.textContent=e.message||"Ошибка обновления статуса.";}
+    }
+
     async function loadStarsAdminOrders(){
       const host=document.getElementById("starsAdminOrders"),status=document.getElementById("starsAdminStatus");
       if(!tg?.initData){status.textContent="Открой Mini App в Telegram под аккаунтом администратора.";return;}
@@ -903,7 +942,7 @@
       document.getElementById("analyticsPanel").style.display=tab==="analytics"?"block":"none";
       if(tab==="profile") renderProfile();
       if(tab==="cart") renderCart();
-      if(tab==="admin"){loadAdminDashboard();loadStarsAdminOrders();loadSteamAdminOrders();}
+      if(tab==="admin"){loadAdminDashboard();loadStarsAdminOrders();loadPremiumAdminOrders();loadSteamAdminOrders();}
       if(tab==="analytics") loadAnalytics();
       window.scrollTo({top:0,behavior:"smooth"});
     }
@@ -1540,17 +1579,26 @@
       else window.open(url, "_blank", "noopener,noreferrer");
     }
 
-    function premiumPaymentNotice() {
-      if (!premiumOrder) return;
-      const text = "Заказ Telegram Premium №" + premiumOrder.order_id +
-        ". Покупатель сообщает об оплате " + premiumOrder.price + " ₽. Проверь поступление средств вручную.";
-      document.getElementById("premiumCreatedOrder").textContent += " · заявка об оплате отмечена";
-      if (tg?.openTelegramLink) {
-        tg.openTelegramLink("https://t.me/saskofff");
-        if (tg.showAlert) tg.showAlert("Напиши в поддержку и укажи номер заказа №" + premiumOrder.order_id + ". Это сообщение не подтверждает поступление денег.");
-      } else {
-        alert("Напиши в поддержку @saskofff и укажи заказ №" + premiumOrder.order_id + ". Это не подтверждает поступление денег.");
-      }
+    async function premiumPaymentNotice() {
+      if (!premiumOrder || premiumOrder.paymentBusy || premiumOrder.paymentReported) return;
+      if (!tg?.initData) return;
+      premiumOrder.paymentBusy=true;
+      const status=document.getElementById("premiumCreatedOrder");
+      const button=document.querySelector('#premiumCheckout button[onclick="premiumPaymentNotice()"]');
+      if(button){button.disabled=true;button.textContent="Отправляем заявку…";}
+      try{
+        const response=await fetch(API_BASE+"/api/premium/payment-reported",{
+          method:"POST",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({initData:tg.initData,order_id:Number(premiumOrder.order_id)})
+        });
+        const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось отправить заявку об оплате.");
+        premiumOrder.paymentReported=true;
+        if(status)status.textContent+=" · заявка об оплате отправлена администратору, ожидает ручной проверки";
+        if(button){button.textContent="Заявка отправлена";button.disabled=true;}
+      }catch(error){
+        if(status)status.textContent+=" · "+(error.message||"Ошибка отправки заявки");
+        if(button){button.disabled=false;button.textContent="Я оплатил";}
+      }finally{premiumOrder.paymentBusy=false;}
     }
 
     function cancelPremiumSelection() {
