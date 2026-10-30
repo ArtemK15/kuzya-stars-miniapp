@@ -1428,9 +1428,9 @@
         const response=await fetch(API_BASE+"/api/gifts/card-order",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,gift_name:selectedGift.name,recipient,bank})});
         const data=await response.json();
         if(!response.ok) throw new Error(data.detail||"Не удалось создать заказ");
-        const methods=await (await fetch(API_BASE+"/api/payment-methods",{cache:"no-store"})).json();
-        const number=bank==="sber"?methods.sber_card:methods.tbank_card;
-        document.getElementById("giftCardBankLabel").textContent=bank==="sber"?"Номер карты Сбера":"Номер карты Т-Банка";
+        const number=data.card_number||"";
+        if(!number) throw new Error("Номер карты не получен с сервера. Проверь настройки способов оплаты.");
+        document.getElementById("giftCardBankLabel").textContent="Номер карты "+(data.bank_label||(bank==="sber"?"Сбера":"Т-Банка"));
         document.getElementById("giftCardNumber").textContent=formatCardNumber(number);
         document.getElementById("giftCardOrderInfo").textContent="Заказ №"+data.order_id+" · "+selectedGift.name+" · "+data.price_rub+" ₽ · ожидает оплаты";
         result.dataset.cardNumber=number;
