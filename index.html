@@ -846,7 +846,7 @@
         status.textContent="Всего заказов: "+orders.length+" · заявок об оплате: "+reported;
         host.innerHTML=orders.length?orders.map(o=>{
           const when=o.created_at?new Date(o.created_at+"Z").toLocaleString():"";
-          const actions=["Ожидает оплаты","Покупатель сообщил об оплате","Оплачен","Выполнен","Отменён"];
+          const actions=["Ожидает оплаты","Покупатель сообщил об оплате","Оплачен","Заказ выдан","Выполнен","Отменён"];
           return '<div style="padding:13px;border:1px solid '+(o.status==="Покупатель сообщил об оплате"?"#d7a93b":"#6e5426")+';border-radius:13px;background:#151322">'+
             '<b>⭐ Stars-заказ #'+o.id+'</b><br>'+
             'Покупатель: '+(o.username?"@"+escapeHtml(o.username):"без username")+' · ID '+o.user_id+'<br>'+
