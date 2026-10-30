@@ -793,7 +793,7 @@
       const details=document.getElementById("steamPaymentDetails");
       details.style.display="none";details.innerHTML="";
       if(!tg?.initData){status.textContent="Открой Mini App внутри Telegram, чтобы оформить заказ.";return;}
-      if(login.length<2||login.length>64||/\\s/.test(login)){status.textContent="Проверь логин Steam: 2–64 символа, без пробелов.";return;}
+      if(login.length<2||login.length>64||/\s/.test(login)){status.textContent="Проверь логин Steam: 2–64 символа, без пробелов.";return;}
       if(!Number.isInteger(amount)||amount<100||amount>100000){status.textContent="Сумма должна быть от 100 до 100 000 ₽.";return;}
       status.textContent="Создаю заказ…";
       try{
