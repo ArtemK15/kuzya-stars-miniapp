@@ -851,7 +851,7 @@
         status.textContent="Всего заказов: "+orders.length+" · заявок об оплате: "+reported;
         host.innerHTML=orders.length?orders.map(o=>{
           const when=o.created_at?new Date(o.created_at+"Z").toLocaleString():"";
-          const actions=["Ожидает оплаты","Покупатель сообщил об оплате","Оплачен","Заказ выдан","Выполнен","Отменён"];
+          const actions=[["Оплачен","Оплачен"],["Заказ выдан","Заказ выдан"],["Отменен","Отменён"],["Выполнен","Выполнен"]];
           return '<div style="padding:13px;border:1px solid '+(o.status==="Покупатель сообщил об оплате"?"#d7a93b":"#6e5426")+';border-radius:13px;background:#151322">'+
             '<b>💎 Premium-заказ #'+o.id+'</b><br>'+
             'Покупатель: '+(o.username?"@"+escapeHtml(o.username):"без username")+' · ID '+o.user_id+'<br>'+
@@ -859,7 +859,7 @@
             'Подписка: <b>'+Number(o.months)+' месяцев</b> · Сумма: <b>'+Number(o.price).toLocaleString("ru-RU")+' ₽</b><br>'+
             'Статус: <b>'+escapeHtml(o.status)+'</b><br><small>'+escapeHtml(when)+'</small>'+
             '<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px">'+
-            actions.map(st=>'<button type="button" class="secondary" '+(st===o.status?'disabled style="opacity:.5"':'')+' onclick="setPremiumOrderStatus('+o.id+',\''+st+'\')">'+st+'</button>').join("")+
+            actions.map(([label,st])=>'<button type="button" class="secondary" '+(st===o.status?'disabled style="opacity:.5"':'')+' onclick="setPremiumOrderStatus('+o.id+',\''+st+'\')">'+label+'</button>').join("")+
             '</div></div>';
         }).join(""):'<div class="section-subtitle">Premium-заказов пока нет.</div>';
       }catch(e){status.textContent=e.message||"Ошибка загрузки Premium-заказов.";}
