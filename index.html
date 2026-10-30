@@ -1444,6 +1444,7 @@
         paidButton.textContent="✅ Оплатил";
         paidButton.style.opacity="1";
         document.getElementById("giftCardPaymentHint").textContent="Переведи точную сумму в рублях, затем нажми «Оплатил». Заявка поступит администратору для проверки.";
+        startCustomerOrderStatusPolling("gifts",data.order_id);
         result.scrollIntoView({behavior:"smooth",block:"nearest"});
       } catch(e) {
         document.getElementById("giftCardOrderInfo").textContent=e.message||"Ошибка создания заказа";
@@ -1478,6 +1479,7 @@
         button.textContent="⏳ Ожидайте подтверждение";
         hint.textContent="Заявка принята. Администратор проверит поступление денег и подтвердит оплату.";
         hint.style.color="#e8c96b";
+        startCustomerOrderStatusPolling("gifts",data.order_id);
       }catch(error){
         button.disabled=false;
         button.textContent="✅ Оплатил";
@@ -1964,6 +1966,7 @@
         "Оплачен": "Ожидайте выдачу",
         "Заказ выдан": "Заказ выдан",
         "Выполнен": "Заказ выполнен",
+        "Выполнен — выдача подтверждена вручную": "Заказ выполнен",
         "Отменён": "Заказ отменён",
         "Отменен": "Заказ отменён"
       };
@@ -1971,7 +1974,13 @@
     }
     function renderCustomerOrderStatus(service, status) {
       const label = customerOrderStatusText(status);
-      if (service === "stars") {
+      if (service === "gifts") {
+        const result=document.getElementById("giftCardPaymentResult");
+        const info=document.getElementById("giftCardOrderInfo");
+        if(info && result?.dataset.orderId) info.textContent="Заказ №"+result.dataset.orderId+" · "+(result.dataset.giftName||"подарок")+" · "+Number(result.dataset.priceRub||0).toLocaleString("ru-RU")+" ₽ · "+label;
+        const button=document.getElementById("giftCardPaidButton");
+        if(button && ["Ожидайте подтверждение","Ожидайте выдачу","Заказ выдан","Заказ выполнен","Заказ отменён"].includes(label)){button.disabled=true;button.textContent=label==="Ожидайте подтверждение"?"⏳ Ожидайте подтверждение":label;}
+      } else if (service === "stars") {
         ["paymentStatus","cardPaymentStatus","sberPaymentStatus"].forEach(id=>{
           const el=document.getElementById(id);
           if(el)el.textContent="Статус: "+label;
@@ -1994,7 +2003,7 @@
           const data=await response.json();
           if(!response.ok)throw new Error(data.detail||"Не удалось обновить статус заказа");
           renderCustomerOrderStatus(service,data.status);
-          if(["Заказ выдан","Выполнен","Отменён","Отменен"].includes(data.status)){
+          if(["Заказ выдан","Выполнен","Выполнен — выдача подтверждена вручную","Отменён","Отменен"].includes(data.status)){
             clearInterval(customerOrderPollTimer);
             customerOrderPollTimer=null;
           }
