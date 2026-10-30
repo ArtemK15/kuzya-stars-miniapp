@@ -575,6 +575,11 @@
     <h2>🛠 Панель администратора</h2>
     <p class="section-subtitle">Данные заказов и остатков. Подтверждение оплаты и выдача товара по-прежнему выполняются через защищённые кнопки бота.</p>
     <button onclick="loadAdminDashboard()">🔄 Обновить данные</button>
+    <h3>⭐ Заказы Telegram Stars</h3>
+    <p class="section-subtitle">Все заказы Stars, получатели, суммы и заявки об оплате. Обновляй статусы прямо здесь.</p>
+    <button type="button" class="secondary" onclick="loadStarsAdminOrders()">🔄 Обновить Stars-заказы</button>
+    <div id="starsAdminStatus" class="section-subtitle" style="margin-top:8px"></div>
+    <div id="starsAdminOrders" style="display:grid;gap:10px;margin:12px 0"></div>
     <h3>🎮 Заказы на пополнение Steam</h3>
     <p class="section-subtitle">Отдельный список Steam-заказов. Проверяй оплату вручную и обновляй статус после выполнения.</p>
     <button type="button" class="secondary" onclick="loadSteamAdminOrders()">🔄 Обновить Steam-заказы</button>
@@ -829,6 +834,40 @@
         button.style.display="none";
       }catch(e){status.textContent=e.message||"Ошибка отправки";button.disabled=false;}
     }
+    async function loadStarsAdminOrders(){
+      const host=document.getElementById("starsAdminOrders"),status=document.getElementById("starsAdminStatus");
+      if(!tg?.initData){status.textContent="Открой Mini App в Telegram под аккаунтом администратора.";return;}
+      status.textContent="Загружаю Stars-заказы…";
+      try{
+        const response=await fetch(API_BASE+"/api/admin/stars/orders?initData="+encodeURIComponent(tg.initData),{cache:"no-store"});
+        const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось загрузить Stars-заказы");
+        const orders=data.orders||[];
+        const reported=orders.filter(o=>o.status==="Покупатель сообщил об оплате").length;
+        status.textContent="Всего заказов: "+orders.length+" · заявок об оплате: "+reported;
+        host.innerHTML=orders.length?orders.map(o=>{
+          const when=o.created_at?new Date(o.created_at+"Z").toLocaleString():"";
+          const actions=["Ожидает оплаты","Покупатель сообщил об оплате","Оплачен","Выполнен","Отменён"];
+          return '<div style="padding:13px;border:1px solid '+(o.status==="Покупатель сообщил об оплате"?"#d7a93b":"#6e5426")+';border-radius:13px;background:#151322">'+
+            '<b>⭐ Stars-заказ #'+o.id+'</b><br>'+
+            'Покупатель: '+(o.username?"@"+escapeHtml(o.username):"без username")+' · ID '+o.user_id+'<br>'+
+            'Получатель: <b>@'+escapeHtml(o.recipient)+'</b><br>'+
+            'Пакет: <b>'+Number(o.quantity).toLocaleString("ru-RU")+' Stars</b> · Сумма: <b>'+Number(o.price).toLocaleString("ru-RU")+' ₽</b><br>'+
+            'Статус: <b>'+escapeHtml(o.status)+'</b><br><small>'+escapeHtml(when)+'</small>'+
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px">'+
+            actions.map(st=>'<button type="button" class="secondary" '+(st===o.status?'disabled style="opacity:.5"':'')+' onclick="setStarsOrderStatus('+o.id+',\''+st+'\')">'+st+'</button>').join("")+
+            '</div></div>';
+        }).join(""):'<div class="section-subtitle">Stars-заказов пока нет.</div>';
+      }catch(e){status.textContent=e.message||"Ошибка загрузки Stars-заказов.";}
+    }
+    async function setStarsOrderStatus(orderId,statusValue){
+      const status=document.getElementById("starsAdminStatus");status.textContent="Обновляю Stars-заказ…";
+      try{
+        const response=await fetch(API_BASE+"/api/admin/stars/status",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,order_id:orderId,status:statusValue})});
+        const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось изменить статус");
+        await loadStarsAdminOrders();
+      }catch(e){status.textContent=e.message||"Ошибка обновления статуса.";}
+    }
+
     async function loadSteamAdminOrders(){
       const host=document.getElementById("steamAdminOrders"),status=document.getElementById("steamAdminStatus");
       if(!tg?.initData){status.textContent="Открой Mini App в Telegram под аккаунтом администратора.";return;}
@@ -864,7 +903,7 @@
       document.getElementById("analyticsPanel").style.display=tab==="analytics"?"block":"none";
       if(tab==="profile") renderProfile();
       if(tab==="cart") renderCart();
-      if(tab==="admin"){loadAdminDashboard();loadSteamAdminOrders();}
+      if(tab==="admin"){loadAdminDashboard();loadStarsAdminOrders();loadSteamAdminOrders();}
       if(tab==="analytics") loadAnalytics();
       window.scrollTo({top:0,behavior:"smooth"});
     }
