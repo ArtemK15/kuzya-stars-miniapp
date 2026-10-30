@@ -1559,8 +1559,9 @@
         if (!response.ok) throw new Error(data.detail || "Не удалось создать заказ");
         premiumOrder = data;
         document.getElementById("premiumCreatedOrder").textContent =
-          "Заказ №" + data.order_id + " · " + data.months + " мес. · " + data.price.toLocaleString("ru-RU") + " ₽ · ожидает оплаты";
+          "Заказ №" + data.order_id + " · " + data.months + " мес. · " + data.price.toLocaleString("ru-RU") + " ₽ · Ожидает оплаты";
         document.getElementById("premiumResult").style.display = "block";
+        startCustomerOrderStatusPolling("premium",data.order_id);
         button.textContent = "✅ Заказ создан";
         if (typeof renderProfile === "function") renderProfile();
       } catch (error) {
@@ -1593,8 +1594,8 @@
         });
         const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось отправить заявку об оплате.");
         premiumOrder.paymentReported=true;
-        if(status)status.textContent+=" · заявка об оплате отправлена администратору, ожидает ручной проверки";
-        if(button){button.textContent="Заявка отправлена";button.disabled=true;}
+        renderCustomerOrderStatus("premium","Покупатель сообщил об оплате");
+        if(button){button.textContent="Ожидайте подтверждение";button.disabled=true;}
       }catch(error){
         if(status)status.textContent+=" · "+(error.message||"Ошибка отправки заявки");
         if(button){button.disabled=false;button.textContent="Я оплатил";}
@@ -1907,6 +1908,58 @@
     function openBankPayment() {
       window.open(paymentMethodsConfig.sbp_url || "https://www.tbank-online.com/rm/r_WZlztaRLrZ.hhcTUJjdlP/gINWL2608", "_blank", "noopener,noreferrer");
     }
+    let customerOrderPollTimer = null;
+    let customerOrderPollKey = "";
+    function customerOrderStatusText(status) {
+      const map = {
+        "Ожидает оплаты": "Ожидает оплаты",
+        "Покупатель сообщил об оплате": "Ожидайте подтверждение",
+        "Оплата заявлена": "Ожидайте подтверждение",
+        "Оплачен": "Ожидайте выдачу",
+        "Заказ выдан": "Заказ выдан",
+        "Выполнен": "Заказ выполнен",
+        "Отменён": "Заказ отменён",
+        "Отменен": "Заказ отменён"
+      };
+      return map[status] || status;
+    }
+    function renderCustomerOrderStatus(service, status) {
+      const label = customerOrderStatusText(status);
+      if (service === "stars") {
+        ["paymentStatus","cardPaymentStatus","sberPaymentStatus"].forEach(id=>{
+          const el=document.getElementById(id);
+          if(el)el.textContent="Статус: "+label;
+        });
+      } else {
+        const el=document.getElementById("premiumCreatedOrder");
+        if(el)el.textContent="Заказ №"+premiumOrder.order_id+" · "+premiumOrder.months+" мес. · "+Number(premiumOrder.price).toLocaleString("ru-RU")+" ₽ · "+label;
+      }
+    }
+    function startCustomerOrderStatusPolling(service, orderId) {
+      const key=service+":"+orderId;
+      if(customerOrderPollKey===key && customerOrderPollTimer) return;
+      if(customerOrderPollTimer) clearInterval(customerOrderPollTimer);
+      customerOrderPollKey=key;
+      const poll=async()=>{
+        if(!tg?.initData) return;
+        try{
+          const url=API_BASE+"/api/orders/"+encodeURIComponent(orderId)+"/status?service="+encodeURIComponent(service)+"&initData="+encodeURIComponent(tg.initData);
+          const response=await fetch(url,{cache:"no-store"});
+          const data=await response.json();
+          if(!response.ok)throw new Error(data.detail||"Не удалось обновить статус заказа");
+          renderCustomerOrderStatus(service,data.status);
+          if(["Заказ выдан","Выполнен","Отменён","Отменен"].includes(data.status)){
+            clearInterval(customerOrderPollTimer);
+            customerOrderPollTimer=null;
+          }
+        }catch(error){
+          console.warn("Order status polling:",error);
+        }
+      };
+      poll();
+      customerOrderPollTimer=setInterval(poll,3000);
+    }
+
     async function markPaid() {
       if (!currentOrder || currentOrder.paymentBusy || currentOrder.paymentReported) return;
       const recipientInput=document.getElementById("starsRecipient");
@@ -1954,9 +2007,9 @@
         const report=await reportResponse.json();
         if(!reportResponse.ok)throw new Error(report.detail||"Не удалось отправить уведомление об оплате.");
         currentOrder.paymentReported=true;
-        const statusText="Заявка отправлена администратору. Оплата ещё не подтверждена — ожидает ручной проверки. Заказ: "+currentOrder.orderId+". Получатель: @"+recipient+".";
-        setStatus(statusText);
-        paidButtons.forEach(button=>{button.disabled=true;button.textContent="Заявка отправлена";button.style.opacity="0.65";button.style.cursor="default";});
+        renderCustomerOrderStatus("stars","Покупатель сообщил об оплате");
+        paidButtons.forEach(button=>{button.disabled=true;button.textContent="Ожидайте подтверждение";button.style.opacity="0.65";button.style.cursor="default";});
+        startCustomerOrderStatusPolling("stars",currentOrder.serverOrderId);
       } catch(error) {
         setStatus("Не удалось отправить заявку: "+(error.message||"ошибка соединения")+". Нажми кнопку ещё раз.");
         paidButtons.forEach(button=>{button.disabled=false;button.textContent="Я оплатил";});
