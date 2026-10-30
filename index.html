@@ -491,7 +491,7 @@
       <label for="steamLoginInput">Логин аккаунта Steam</label>
       <input id="steamLoginInput" maxlength="64" autocomplete="off" placeholder="Твой логин Steam" style="width:100%;padding:13px;margin:8px 0 14px;background:#0b0b18;color:#fff;border:1px solid #6e5426">
       <label for="steamAmountInput">Сумма пополнения, ₽</label>
-      <input id="steamAmountInput" type="number" min="100" max="100000" step="1" value="100" oninput="updateSteamTotal()" style="width:100%;padding:13px;margin:8px 0;background:#0b0b18;color:#fff;border:1px solid #6e5426">
+      <input id="steamAmountInput" type="number" min="100" max="10000" step="1" value="100" oninput="updateSteamTotal()" style="width:100%;padding:13px;margin:8px 0;background:#0b0b18;color:#fff;border:1px solid #6e5426">
       <div id="steamTotalPreview" class="orderline">К оплате: 105 ₽</div>
       <div style="font-weight:bold;margin:14px 0 8px">Способ оплаты</div>
       <div class="payment-methods">
@@ -794,7 +794,7 @@
       details.style.display="none";details.innerHTML="";
       if(!tg?.initData){status.textContent="Открой Mini App внутри Telegram, чтобы оформить заказ.";return;}
       if(login.length<2||login.length>64||/\s/.test(login)){status.textContent="Проверь логин Steam: 2–64 символа, без пробелов.";return;}
-      if(!Number.isInteger(amount)||amount<100||amount>100000){status.textContent="Сумма должна быть от 100 до 100 000 ₽.";return;}
+      if(!Number.isInteger(amount)||amount<100||amount>10000){status.textContent="Сумма должна быть от 100 до 10 000 ₽.";return;}
       status.textContent="Создаю заказ…";
       try{
         const response=await fetch(API_BASE+"/api/steam/orders",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,steam_login:login,amount_rub:amount,payment_method:steamPaymentMethod})});
