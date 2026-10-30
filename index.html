@@ -501,6 +501,7 @@
       <button type="button" onclick="createSteamOrder()">Создать заказ</button>
       <div id="steamOrderStatus" class="section-subtitle" style="margin-top:12px"></div>
       <div id="steamPaymentDetails" style="display:none;text-align:left;margin-top:14px"></div>
+      <button id="steamPaidButton" type="button" style="display:none;margin-top:12px" onclick="reportSteamPaid()">✅ Оплатил</button>
     </div>
     <button type="button" class="secondary" onclick="showTab('services')">← Назад к играм и сервисам</button>
   </section>
@@ -776,6 +777,7 @@
     let giftCart = JSON.parse(localStorage.getItem("kuzyaGiftCart") || "[]");
     function saveCart(){localStorage.setItem("kuzyaGiftCart",JSON.stringify(giftCart));renderCart();}
     let steamPaymentMethod = "sbp";
+    let steamCurrentOrderId = null;
     function updateSteamTotal(){
       const amount=Number(document.getElementById("steamAmountInput")?.value||0);
       const total=amount>=100?Math.ceil(amount*1.05):0;
@@ -792,6 +794,8 @@
       const amount=Number(document.getElementById("steamAmountInput").value);
       const details=document.getElementById("steamPaymentDetails");
       details.style.display="none";details.innerHTML="";
+      document.getElementById("steamPaidButton").style.display="none";
+      steamCurrentOrderId=null;
       if(!tg?.initData){status.textContent="Открой Mini App внутри Telegram, чтобы оформить заказ.";return;}
       if(login.length<2||login.length>64||/\s/.test(login)){status.textContent="Проверь логин Steam: 2–64 символа, без пробелов.";return;}
       if(!Number.isInteger(amount)||amount<100||amount>10000){status.textContent="Сумма должна быть от 100 до 10 000 ₽.";return;}
@@ -799,6 +803,8 @@
       try{
         const response=await fetch(API_BASE+"/api/steam/orders",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,steam_login:login,amount_rub:amount,payment_method:steamPaymentMethod})});
         const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось создать заказ");
+        steamCurrentOrderId=data.order_id;
+        document.getElementById("steamPaidButton").style.display="block";
         status.textContent="✅ Заказ №"+data.order_id+" создан. Переведи точную сумму и сообщи об оплате в поддержку. Оплата проверяется вручную.";
         const p=data.payment||{};
         let html='<div class="orderline"><b>Заказ №'+data.order_id+'</b><br>Логин Steam: '+escapeHtml(login)+'<br>Пополнение: '+amount.toLocaleString("ru-RU")+' ₽<br><b>К оплате: '+data.total_rub.toLocaleString("ru-RU")+' ₽</b></div>';
@@ -811,6 +817,18 @@
         details.innerHTML=html;details.style.display="block";
       }catch(e){status.textContent=e.message||"Ошибка создания заказа.";}
     }
+    async function reportSteamPaid(){
+      const button=document.getElementById("steamPaidButton"),status=document.getElementById("steamOrderStatus");
+      if(!steamCurrentOrderId||!tg?.initData)return;
+      button.disabled=true;status.textContent="Отправляю уведомление об оплате…";
+      try{
+        const response=await fetch(API_BASE+"/api/steam/payment-reported",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,order_id:steamCurrentOrderId})});
+        const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось отправить уведомление");
+        status.textContent="✅ Сообщение об оплате отправлено. Администратор проверит поступление денег вручную.";
+        button.textContent="✓ Об оплате сообщено";
+        button.style.display="none";
+      }catch(e){status.textContent=e.message||"Ошибка отправки";button.disabled=false;}
+    }
     async function loadSteamAdminOrders(){
       const host=document.getElementById("steamAdminOrders"),status=document.getElementById("steamAdminStatus");
       if(!tg?.initData){status.textContent="Открой Mini App в Telegram под аккаунтом администратора.";return;}
@@ -819,7 +837,7 @@
         const response=await fetch(API_BASE+"/api/admin/steam/orders?initData="+encodeURIComponent(tg.initData),{cache:"no-store"});
         const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось загрузить заказы");
         status.textContent="Заказов: "+data.orders.length;
-        host.innerHTML=data.orders.length?data.orders.map(o=>'<div style="padding:13px;border:1px solid #6e5426;border-radius:13px;background:#151322"><b>Steam-заказ #'+o.id+'</b><br>Покупатель: '+escapeHtml(o.username||String(o.user_id))+' · ID '+o.user_id+'<br>Логин: <code>'+escapeHtml(o.steam_login)+'</code><br>Пополнение: '+o.amount_rub+' ₽ · К оплате: <b>'+o.total_rub+' ₽</b><br>Оплата: '+(o.payment_method==="sbp"?"СБП":"Карта")+'<br>Статус: <b>'+escapeHtml(o.status)+'</b><div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px">'+["Ожидает оплаты","Оплачен","Выполнен","Отменён"].map(st=>'<button type="button" class="secondary" onclick="setSteamOrderStatus('+o.id+',\''+st+'\')">'+st+'</button>').join("")+'</div></div>').join(""):'<div class="section-subtitle">Steam-заказов пока нет.</div>';
+        host.innerHTML=data.orders.length?data.orders.map(o=>'<div style="padding:13px;border:1px solid #6e5426;border-radius:13px;background:#151322"><b>Steam-заказ #'+o.id+'</b><br>Покупатель: '+escapeHtml(o.username||String(o.user_id))+' · ID '+o.user_id+'<br>Логин: <code>'+escapeHtml(o.steam_login)+'</code><br>Пополнение: '+o.amount_rub+' ₽ · К оплате: <b>'+o.total_rub+' ₽</b><br>Оплата: '+(o.payment_method==="sbp"?"СБП":"Карта")+'<br>Статус: <b>'+escapeHtml(o.status)+'</b><div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px">'+["Ожидает оплаты","Оплата заявлена","Оплачен","Выполнен","Отменён"].map(st=>'<button type="button" class="secondary" onclick="setSteamOrderStatus('+o.id+',\''+st+'\')">'+st+'</button>').join("")+'</div></div>').join(""):'<div class="section-subtitle">Steam-заказов пока нет.</div>';
       }catch(e){status.textContent=e.message||"Ошибка загрузки.";}
     }
     async function setSteamOrderStatus(orderId,statusValue){
