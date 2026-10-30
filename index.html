@@ -462,11 +462,37 @@
   </section>
   <nav class="nav">
     <button onclick="showTab('shop')">🏠 Магазин</button>
+    <button onclick="showTab('services')">🎮 Все игры и сервисы</button>
     <button onclick="showTab('cart')">🛒 Корзина <span id="cartCount">0</span></button>
     <button onclick="showTab('profile')">👤 Кабинет</button>
     <button id="analyticsNavButton" onclick="showTab('analytics')" style="display:none">📊 Статистика</button>
     <button id="adminNavButton" onclick="showTab('admin')" style="display:none">🛠 Админ</button>
   </nav>
+  <section class="profile" id="servicesPanel">
+    <h2>🎮 Все игры и сервисы</h2>
+    <p class="section-subtitle">Выбери сервис, чтобы перейти к нужной странице прямо в приложении.</p>
+    <div class="products" style="grid-template-columns:1fr">
+      <div class="gift-card" style="text-align:left;padding:16px">
+        <div style="display:flex;align-items:center;gap:14px">
+          <div style="display:grid;place-items:center;flex:0 0 54px;height:54px;border-radius:15px;background:#202b43;font-size:28px">🎮</div>
+          <div style="flex:1;min-width:0">
+            <div class="gift-name" style="justify-content:flex-start;min-height:0;font-size:17px">Steam</div>
+            <div class="section-subtitle" style="margin:4px 0 0">Пополнение кошелька Steam</div>
+          </div>
+        </div>
+        <button type="button" style="margin-top:14px" onclick="showSteamPage()">Открыть Steam</button>
+      </div>
+    </div>
+  </section>
+  <section class="profile" id="steamPanel">
+    <h2>🎮 Пополнение Steam</h2>
+    <p class="section-subtitle">Официальная страница пополнения кошелька Steam. Если Steam запрещает отображение внутри приложения, воспользуйся кнопкой открытия страницы отдельно.</p>
+    <div style="width:100%;height:min(72vh,760px);min-height:480px;overflow:hidden;border:1px solid #6e5426;border-radius:14px;background:#fff">
+      <iframe id="steamFrame" title="Steam — пополнение кошелька" src="about:blank" style="display:block;width:100%;height:100%;border:0;background:#fff" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    </div>
+    <button type="button" class="secondary" onclick="window.open('https://store.steampowered.com/steamaccount/addfunds','_blank','noopener')">Открыть Steam отдельно</button>
+    <button type="button" class="secondary" onclick="showTab('services')">← Назад к играм и сервисам</button>
+  </section>
   <section class="profile" id="profilePanel">
     <h2>👤 Личный кабинет</h2><div id="profileInfo">Загрузка профиля Telegram…</div>
     <h3>📦 Мои заказы</h3><div id="profileOrders">Открываю историю заказов…</div>
@@ -733,8 +759,16 @@
     let invoiceBusy = false;
     let giftCart = JSON.parse(localStorage.getItem("kuzyaGiftCart") || "[]");
     function saveCart(){localStorage.setItem("kuzyaGiftCart",JSON.stringify(giftCart));renderCart();}
+    function showSteamPage(){
+      showTab("steam");
+      const frame = document.getElementById("steamFrame");
+      if (frame && frame.src === "about:blank") frame.src = "https://store.steampowered.com/steamaccount/addfunds";
+    }
+
     function showTab(tab){
       document.getElementById("shopPanel").style.display=tab==="shop"?"block":"none";
+      document.getElementById("servicesPanel").style.display=tab==="services"?"block":"none";
+      document.getElementById("steamPanel").style.display=tab==="steam"?"block":"none";
       document.getElementById("cartPanel").style.display=tab==="cart"?"block":"none";
       document.getElementById("profilePanel").style.display=tab==="profile"?"block":"none";
       document.getElementById("adminPanel").style.display=tab==="admin"?"block":"none";
