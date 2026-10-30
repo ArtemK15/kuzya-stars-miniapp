@@ -1435,6 +1435,10 @@
         document.getElementById("giftCardOrderInfo").textContent="Заказ №"+data.order_id+" · "+selectedGift.name+" · "+data.price_rub+" ₽ · ожидает оплаты";
         result.dataset.cardNumber=number;
         result.dataset.orderId=String(data.order_id);
+        result.dataset.giftName=selectedGift.name;
+        result.dataset.recipient=recipient;
+        result.dataset.priceRub=String(data.price_rub);
+        result.dataset.bank=bank;
         const paidButton=document.getElementById("giftCardPaidButton");
         paidButton.disabled=false;
         paidButton.textContent="✅ Оплатил";
@@ -1457,12 +1461,22 @@
       try{
         const response=await fetch(API_BASE+"/api/gifts/card-payment-reported",{
           method:"POST",headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({initData:tg.initData,order_id:orderId})
+          body:JSON.stringify({
+            initData:tg.initData,order_id:orderId,
+            gift_name:result.dataset.giftName||"",
+            recipient:result.dataset.recipient||"",
+            price_rub:Number(result.dataset.priceRub||0),
+            bank:result.dataset.bank||""
+          })
         });
         const data=await response.json();
         if(!response.ok)throw new Error(data.detail||"Не удалось отправить заявку.");
+        if(data.order_id){
+          result.dataset.orderId=String(data.order_id);
+          document.getElementById("giftCardOrderInfo").textContent="Заказ №"+data.order_id+" · "+(result.dataset.giftName||"подарок")+" · "+Number(result.dataset.priceRub).toLocaleString("ru-RU")+" ₽ · ожидает подтверждения";
+        }
         button.textContent="⏳ Ожидайте подтверждение";
-        hint.textContent="Заявка отправлена администратору. Оплата будет подтверждена после проверки поступления денег.";
+        hint.textContent="Заявка принята. Администратор проверит поступление денег и подтвердит оплату.";
         hint.style.color="#e8c96b";
       }catch(error){
         button.disabled=false;
