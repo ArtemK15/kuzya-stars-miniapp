@@ -1828,21 +1828,19 @@
       if (!/^[A-Za-z0-9_]{5,32}$/.test(recipient)) {
         if(recipientStatus)recipientStatus.textContent="Введи корректный Telegram username: 5–32 символа, латинские буквы, цифры или _.";
         recipientInput?.focus();
-        if(tg?.showAlert)tg.showAlert("Укажи корректный username получателя в Telegram перед продолжением.");
-        else alert("Укажи корректный username получателя в Telegram перед продолжением.");
         return;
       }
       currentOrder.recipient=recipient;
       if(recipientStatus)recipientStatus.textContent="";
-      const message = "Покупатель сообщает об оплате. Заказ " + currentOrder.orderId + ", " + currentOrder.quantity + " Stars, получатель @" + recipient + ", " + currentOrder.price + " ₽. Требуется ручная проверка поступления средств.";
-      document.getElementById("paymentStatus").textContent = "Статус: заявка об оплате отправлена; ожидает ручной проверки";
-      document.getElementById("cardPaymentStatus").textContent = "Статус: заявка об оплате отмечена; ожидает ручной проверки";
-      document.getElementById("sberPaymentStatus").textContent = "Статус: заявка об оплате отмечена; ожидает ручной проверки";
-      if (tg) {
-        tg.showAlert("Заявка об оплате отмечена на этом экране. Это ещё не подтверждает поступление денег. Напиши в поддержку магазина с номером заказа: " + currentOrder.orderId);
-      } else {
-        alert("Заявка отмечена на этом экране, но не отправлена владельцу автоматически. Сохрани номер заказа: " + currentOrder.orderId);
-      }
+      const paymentStatus=document.getElementById("paymentStatus");
+      const cardStatus=document.getElementById("cardPaymentStatus");
+      const sberStatus=document.getElementById("sberPaymentStatus");
+      const statusText="Заявка отмечена на этом экране. Оплата ещё не подтверждена — дождись ручной проверки. Номер заказа: "+currentOrder.orderId+". Получатель: @"+recipient+".";
+      if(paymentStatus)paymentStatus.textContent=statusText;
+      if(cardStatus)cardStatus.textContent=statusText;
+      if(sberStatus)sberStatus.textContent=statusText;
+      const paidButtons=document.querySelectorAll('#payment button[onclick="markPaid()"]');
+      paidButtons.forEach(button=>{button.disabled=true;button.textContent="Заявка отмечена";button.style.opacity="0.65";button.style.cursor="default";});
     }
     function closePayment() {
       document.getElementById("payment").style.display = "none";
