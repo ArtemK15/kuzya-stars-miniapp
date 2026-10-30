@@ -719,7 +719,7 @@
     <label for="giftRecipient" style="display:block;text-align:left;margin:14px 0 6px;color:#ddd6ff">Username получателя в Telegram</label>
     <input id="giftRecipient" autocomplete="off" placeholder="@username" style="width:100%;padding:13px;border-radius:10px;border:1px solid #6d4bc3;background:#0b0b18;color:#fff;font-size:15px">
     <p style="font-size:12px;color:#aaa;line-height:1.5">Оплата откроется в Telegram Stars (XTR). После успешной оплаты заказ появится у владельца; подарок отправляется вручную.</p>
-    <button onclick="addGiftToCart(selectedGift.name,selectedGift.price,selectedGift.stock)">🛒 Добавить в корзину</button><button id="payGiftButton" onclick="payForGift()">⭐ Оплатить через Telegram Stars</button><button type="button" onclick="createGiftCardOrder('tbank')">💳 Оплатить картой Т-Банка</button><button type="button" onclick="createGiftCardOrder('sber')">💚 Оплатить картой Сбера</button><div id="giftCardPaymentResult" style="display:none;margin-top:10px"><div class="orderline" id="giftCardOrderInfo"></div><div class="card-number-box"><span id="giftCardBankLabel">Номер карты</span><strong id="giftCardNumber"></strong></div><button type="button" onclick="copyGiftCardNumber()">📋 Скопировать номер карты</button><p style="font-size:12px;color:#aaa;line-height:1.5">Переведи точную сумму в рублях. После перевода напиши в поддержку или дождись ручного подтверждения заказа.</p></div>
+    <button onclick="addGiftToCart(selectedGift.name,selectedGift.price,selectedGift.stock)">🛒 Добавить в корзину</button><button id="payGiftButton" onclick="payForGift()">⭐ Оплатить через Telegram Stars</button><button type="button" onclick="createGiftCardOrder('tbank')">💳 Оплатить картой Т-Банка</button><button type="button" onclick="createGiftCardOrder('sber')">💚 Оплатить картой Сбера</button><div id="giftCardPaymentResult" style="display:none;margin-top:10px"><div class="orderline" id="giftCardOrderInfo"></div><div class="card-number-box"><span id="giftCardBankLabel">Номер карты</span><strong id="giftCardNumber"></strong></div><button type="button" onclick="copyGiftCardNumber()">📋 Скопировать номер карты</button><button type="button" id="giftCardPaidButton" onclick="reportGiftCardPayment()" style="margin-top:9px">✅ Оплатил</button><p id="giftCardPaymentHint" style="font-size:12px;color:#aaa;line-height:1.5">Переведи точную сумму в рублях, затем нажми «Оплатил». Заявка поступит администратору для проверки.</p></div>
     <button class="secondary" onclick="cancelGiftSelection()">❌ Отменить выбор</button>
     <button class="secondary" onclick="backToGifts()">⬅️ К подаркам</button>
   </section>
@@ -1434,9 +1434,41 @@
         document.getElementById("giftCardNumber").textContent=formatCardNumber(number);
         document.getElementById("giftCardOrderInfo").textContent="Заказ №"+data.order_id+" · "+selectedGift.name+" · "+data.price_rub+" ₽ · ожидает оплаты";
         result.dataset.cardNumber=number;
+        result.dataset.orderId=String(data.order_id);
+        const paidButton=document.getElementById("giftCardPaidButton");
+        paidButton.disabled=false;
+        paidButton.textContent="✅ Оплатил";
+        paidButton.style.opacity="1";
+        document.getElementById("giftCardPaymentHint").textContent="Переведи точную сумму в рублях, затем нажми «Оплатил». Заявка поступит администратору для проверки.";
         result.scrollIntoView({behavior:"smooth",block:"nearest"});
       } catch(e) {
         document.getElementById("giftCardOrderInfo").textContent=e.message||"Ошибка создания заказа";
+      }
+    }
+    async function reportGiftCardPayment() {
+      const result=document.getElementById("giftCardPaymentResult");
+      const orderId=Number(result.dataset.orderId||0);
+      const button=document.getElementById("giftCardPaidButton");
+      const hint=document.getElementById("giftCardPaymentHint");
+      if(!orderId||!tg?.initData){hint.textContent="Не найден заказ. Создай заказ заново.";return;}
+      if(button.disabled)return;
+      button.disabled=true;
+      button.textContent="Отправляем заявку…";
+      try{
+        const response=await fetch(API_BASE+"/api/gifts/card-payment-reported",{
+          method:"POST",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({initData:tg.initData,order_id:orderId})
+        });
+        const data=await response.json();
+        if(!response.ok)throw new Error(data.detail||"Не удалось отправить заявку.");
+        button.textContent="⏳ Ожидайте подтверждение";
+        hint.textContent="Заявка отправлена администратору. Оплата будет подтверждена после проверки поступления денег.";
+        hint.style.color="#e8c96b";
+      }catch(error){
+        button.disabled=false;
+        button.textContent="✅ Оплатил";
+        hint.textContent=error.message||"Ошибка отправки заявки. Попробуй ещё раз.";
+        hint.style.color="#ff9a9a";
       }
     }
     async function copyGiftCardNumber() {
