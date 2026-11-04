@@ -650,6 +650,11 @@
     <button type="button" class="secondary" onclick="loadSteamAdminOrders()">🔄 Обновить Steam-заказы</button>
     <div id="steamAdminStatus" class="section-subtitle" style="margin-top:8px"></div>
     <div id="steamAdminOrders" style="display:grid;gap:10px;margin:12px 0"></div>
+    <h3>🌐 Заказы Proxy</h3>
+    <p class="section-subtitle">Проверяй поступление 30 ₽ и подтверждай оплату. После подтверждения ссылка отправится покупателю в Telegram.</p>
+    <button type="button" class="secondary" onclick="loadProxyAdminOrders()">🔄 Обновить Proxy-заказы</button>
+    <div id="proxyAdminStatus" class="section-subtitle" style="margin-top:8px"></div>
+    <div id="proxyAdminOrders" style="display:grid;gap:10px;margin:12px 0"></div>
     <h3>📣 Объявление для покупателей</h3>
     <p class="section-subtitle">Например: «Ведутся технические работы». После публикации объявление увидят все посетители магазина.</p>
     <label for="announcementTitleInput" style="display:block;margin:10px 0 6px">Заголовок</label>
@@ -983,6 +988,39 @@
       }catch(e){status.textContent=e.message||"Ошибка обновления статуса.";}
     }
 
+
+    async function loadProxyAdminOrders(){
+      const host=document.getElementById("proxyAdminOrders"),status=document.getElementById("proxyAdminStatus");
+      if(!tg?.initData){status.textContent="Открой Mini App под аккаунтом администратора.";return;}
+      status.textContent="Загружаю Proxy-заказы…";
+      try{
+        const response=await fetch(API_BASE+"/api/admin/proxy/orders?initData="+encodeURIComponent(tg.initData),{cache:"no-store"});
+        const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось загрузить Proxy-заказы");
+        const orders=data.orders||[];
+        status.textContent="Всего Proxy-заказов: "+orders.length+" · заявок об оплате: "+orders.filter(o=>o.status==="Оплата заявлена").length;
+        host.innerHTML=orders.length?orders.map(o=>{
+          const when=o.created_at?new Date(o.created_at+"Z").toLocaleString():"";
+          const canConfirm=["Оплата заявлена","Оплачен"].includes(o.status);
+          return '<div style="padding:13px;border:1px solid '+(canConfirm?"#d7a93b":"#6e5426")+';border-radius:13px;background:#151322">'+
+            '<b>🌐 Proxy-заказ #'+o.order_id+'</b><br>'+
+            'Покупатель: '+(o.username?"@"+escapeHtml(o.username):"без username")+' · ID '+o.user_id+'<br>'+
+            'Товар: <b>'+escapeHtml(o.title)+'</b> · <b>'+o.price_rub+' ₽</b><br>'+
+            'Статус: <b>'+escapeHtml(o.status)+'</b><br><small>'+escapeHtml(when)+'</small>'+
+            (canConfirm?'<button type="button" style="margin-top:10px" onclick="confirmProxyPayment('+o.order_id+')">'+(o.status==="Оплачен"?"Повторить отправку ссылки":"Подтвердить оплату и выдать ссылку")+'</button>':'')+
+            '</div>';
+        }).join(""):'<div class="section-subtitle">Proxy-заказов пока нет.</div>';
+      }catch(e){status.textContent=e.message||"Ошибка загрузки Proxy-заказов.";}
+    }
+    async function confirmProxyPayment(orderId){
+      const status=document.getElementById("proxyAdminStatus");status.textContent="Подтверждаю оплату и отправляю ссылку…";
+      try{
+        const response=await fetch(API_BASE+"/api/admin/proxy/confirm-payment",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,order_id:orderId})});
+        const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось выдать Proxy");
+        status.textContent=data.already_issued?"Заказ уже выдан.":"Оплата подтверждена, ссылка отправлена покупателю.";
+        await loadProxyAdminOrders();
+      }catch(e){status.textContent=e.message||"Ошибка выдачи Proxy.";}
+    }
+
     async function loadStarsAdminOrders(){
       const host=document.getElementById("starsAdminOrders"),status=document.getElementById("starsAdminStatus");
       if(!tg?.initData){status.textContent="Открой Mini App в Telegram под аккаунтом администратора.";return;}
@@ -1054,7 +1092,7 @@
       document.getElementById("analyticsPanel").style.display=tab==="analytics"?"block":"none";
       if(tab==="profile") renderProfile();
       if(tab==="cart") renderCart();
-      if(tab==="admin"){loadAdminDashboard();loadStarsAdminOrders();loadPremiumAdminOrders();loadSteamAdminOrders();}
+      if(tab==="admin"){loadAdminDashboard();loadStarsAdminOrders();loadPremiumAdminOrders();loadSteamAdminOrders();loadProxyAdminOrders();}
       if(tab==="analytics") loadAnalytics();
       window.scrollTo({top:0,behavior:"smooth"});
     }
