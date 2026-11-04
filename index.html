@@ -156,6 +156,13 @@
       .products { gap: 9px; }
       .gift-card, .premium-card { padding: 13px 8px; }
     }
+    .nav { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .proxy-card, .vpn-card { border:1px solid #6f5526; border-radius:18px; padding:17px; background:radial-gradient(ellipse at top right,#3b2b1645,transparent 60%),linear-gradient(145deg,#1b1929,#10101b); }
+    .proxy-card h3, .vpn-card h3 { margin:0 0 8px; color:#f5d779; }
+    .proxy-meta { display:flex; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px solid #393247; font-size:13px; }
+    .proxy-meta span { color:#aaa6c5; }
+    .proxy-card button:disabled { opacity:.65; cursor:not-allowed; filter:none; transform:none; box-shadow:none; }
+    @media (min-width:700px) { .nav { grid-template-columns:repeat(7,minmax(0,1fr)); } }
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
     }
@@ -463,6 +470,8 @@
   <nav class="nav">
     <button onclick="showTab('shop')">🏠 Магазин</button>
     <button onclick="showTab('services')">🎮 Все игры и сервисы</button>
+    <button onclick="showTab('proxy')">🌐 Proxy</button>
+    <!-- VPN navigation is intentionally hidden until the VPN product is launched. -->
     <button onclick="showTab('cart')">🛒 Корзина <span id="cartCount">0</span></button>
     <button onclick="showTab('profile')">👤 Кабинет</button>
     <button id="analyticsNavButton" onclick="showTab('analytics')" style="display:none">📊 Статистика</button>
@@ -483,6 +492,57 @@
         <button type="button" style="margin-top:14px" onclick="showSteamPage()">Открыть Steam</button>
       </div>
     </div>
+  </section>
+  <section class="profile" id="proxyPanel">
+    <h2>🌐 MTProto Proxy Germany</h2>
+    <p class="section-subtitle">Выбери сервер. Все три варианта доступны без ограничения количества продаж. Покупка однократная, без срока окончания доступа.</p>
+    <div style="padding:14px;border:1px solid #51452f;border-radius:14px;margin:12px 0;background:#171522">
+      <div style="font-weight:bold;margin-bottom:8px">Способ оплаты</div>
+      <select id="proxyPaymentMethod" style="width:100%;padding:12px;border-radius:10px;background:#0b0b18;color:#fff;border:1px solid #6f5526">
+        <option value="sbp">СБП</option>
+        <option value="tbank">Карта Т-Банка</option>
+        <option value="sber">Карта Сбера</option>
+      </select>
+      <p class="section-subtitle" style="margin:8px 0 0">Оплата проверяется вручную. Ссылка подключения выдаётся после подтверждения администратором.</p>
+    </div>
+    <div class="products" style="grid-template-columns:1fr">
+      <article class="proxy-card">
+        <h3>🇩🇪 Proxy Germany¹</h3>
+        <div class="proxy-meta"><span>Стоимость</span><b>30 ₽</b></div>
+        <div class="proxy-meta"><span>Срок доступа</span><b>Без ограничения по времени</b></div>
+        <div class="proxy-meta"><span>Лимит продаж</span><b>Без ограничений</b></div>
+        <button type="button" onclick="createProxyOrder('germany_1')">Купить за 30 ₽</button>
+      </article>
+      <article class="proxy-card">
+        <h3>🇩🇪 Proxy Germany²</h3>
+        <div class="proxy-meta"><span>Стоимость</span><b>30 ₽</b></div>
+        <div class="proxy-meta"><span>Срок доступа</span><b>Без ограничения по времени</b></div>
+        <div class="proxy-meta"><span>Лимит продаж</span><b>Без ограничений</b></div>
+        <button type="button" onclick="createProxyOrder('germany_2')">Купить за 30 ₽</button>
+      </article>
+      <article class="proxy-card">
+        <h3>🇩🇪 Proxy Germany³</h3>
+        <div class="proxy-meta"><span>Стоимость</span><b>30 ₽</b></div>
+        <div class="proxy-meta"><span>Срок доступа</span><b>Без ограничения по времени</b></div>
+        <div class="proxy-meta"><span>Лимит продаж</span><b>Без ограничений</b></div>
+        <button type="button" onclick="createProxyOrder('germany_3')">Купить за 30 ₽</button>
+      </article>
+    </div>
+    <p class="section-subtitle" style="margin-top:14px">После подтверждения оплаты покупатель получит ссылку подключения выбранного прокси. Срок действия подписки не ограничивается. Ссылки не публикуются в открытом каталоге.</p>
+    <div id="proxyOrderStatus" class="section-subtitle" style="margin-top:12px"></div>
+    <div id="proxyPaymentDetails" style="display:none;text-align:left;margin-top:12px"></div>
+    <button id="proxyPaidButton" type="button" style="display:none" onclick="reportProxyPayment()">Я оплатил</button>
+    <div id="proxyMyOrders" style="margin-top:14px"></div>
+    <button type="button" class="secondary" onclick="showTab('shop')">← Назад в магазин</button>
+  </section>
+  <section class="profile" id="vpnPanel">
+    <h2>🛡 VPN</h2>
+    <div class="vpn-card">
+      <h3>VPN-подписки</h3>
+      <p class="section-subtitle">Раздел подготовлен. Тарифы, подключение и автоматическая выдача VPN-конфигураций появятся после настройки VPN-сервера.</p>
+      <span class="badge" style="display:inline-block;padding:5px 10px;border:1px solid #6f5526;border-radius:999px;color:#f5d779;font-size:11px">Скоро запуск</span>
+    </div>
+    <button type="button" class="secondary" onclick="showTab('shop')">← Назад в магазин</button>
   </section>
   <section class="profile" id="steamPanel">
     <h2>🎮 Пополнение Steam</h2>
@@ -590,6 +650,11 @@
     <button type="button" class="secondary" onclick="loadSteamAdminOrders()">🔄 Обновить Steam-заказы</button>
     <div id="steamAdminStatus" class="section-subtitle" style="margin-top:8px"></div>
     <div id="steamAdminOrders" style="display:grid;gap:10px;margin:12px 0"></div>
+    <h3>🌐 Заказы Proxy</h3>
+    <p class="section-subtitle">Проверяй поступление 30 ₽ и подтверждай оплату. После подтверждения ссылка отправится покупателю в Telegram.</p>
+    <button type="button" class="secondary" onclick="loadProxyAdminOrders()">🔄 Обновить Proxy-заказы</button>
+    <div id="proxyAdminStatus" class="section-subtitle" style="margin-top:8px"></div>
+    <div id="proxyAdminOrders" style="display:grid;gap:10px;margin:12px 0"></div>
     <h3>📣 Объявление для покупателей</h3>
     <p class="section-subtitle">Например: «Ведутся технические работы». После публикации объявление увидят все посетители магазина.</p>
     <label for="announcementTitleInput" style="display:block;margin:10px 0 6px">Заголовок</label>
@@ -786,6 +851,56 @@
     let invoiceBusy = false;
     let giftCart = JSON.parse(localStorage.getItem("kuzyaGiftCart") || "[]");
     function saveCart(){localStorage.setItem("kuzyaGiftCart",JSON.stringify(giftCart));renderCart();}
+    let proxyCurrentOrderId = null;
+    async function createProxyOrder(proxyKey){
+      const status=document.getElementById("proxyOrderStatus");
+      const details=document.getElementById("proxyPaymentDetails");
+      const paidButton=document.getElementById("proxyPaidButton");
+      details.style.display="none";details.innerHTML="";paidButton.style.display="none";
+      proxyCurrentOrderId=null;
+      if(!tg?.initData){status.textContent="Открой Mini App внутри Telegram, чтобы оформить заказ.";return;}
+      status.textContent="Создаю заказ…";
+      try{
+        const paymentMethod=document.getElementById("proxyPaymentMethod").value;
+        const response=await fetch(API_BASE+"/api/proxy/orders",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,proxy_key:proxyKey,payment_method:paymentMethod})});
+        const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось создать заказ");
+        proxyCurrentOrderId=data.order_id;
+        const p=data.payment||{};
+        let html='<div class="orderline"><b>Proxy-заказ №'+data.order_id+'</b><br>'+data.price_rub+' ₽</div>';
+        if(p.type==="sbp"){
+          html+='<div class="orderline">Оплата через СБП<br>'+(p.url?'<a href="'+escapeHtml(p.url)+'" target="_blank" rel="noopener" style="color:#f4cc67">Перейти к оплате</a>':'Ссылка СБП не настроена.')+'</div>';
+        }else{
+          html+='<div class="orderline">Перевод на карту '+escapeHtml(p.bank||"")+'<br><b>'+escapeHtml(p.card_number||"")+'</b></div>';
+        }
+        details.innerHTML=html;details.style.display="block";paidButton.style.display="block";
+        status.textContent="Заказ создан. Переведи ровно 30 ₽, затем нажми «Я оплатил».";
+        await loadMyProxyOrders();
+      }catch(e){status.textContent=e.message||"Ошибка создания заказа.";}
+    }
+    async function reportProxyPayment(){
+      const status=document.getElementById("proxyOrderStatus");
+      if(!proxyCurrentOrderId||!tg?.initData)return;
+      const button=document.getElementById("proxyPaidButton");button.disabled=true;
+      status.textContent="Отправляю уведомление…";
+      try{
+        const response=await fetch(API_BASE+"/api/proxy/payment-reported",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,order_id:proxyCurrentOrderId})});
+        const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось отправить уведомление");
+        status.textContent="✅ Заявка об оплате отправлена. После проверки администратором ссылка подключения появится в заказе и придёт в Telegram.";
+        button.style.display="none";await loadMyProxyOrders();
+      }catch(e){status.textContent=e.message||"Ошибка отправки.";button.disabled=false;}
+    }
+    async function loadMyProxyOrders(){
+      const box=document.getElementById("proxyMyOrders");if(!box||!tg?.initData)return;
+      try{
+        const response=await fetch(API_BASE+"/api/proxy/my-orders?initData="+encodeURIComponent(tg.initData));
+        const data=await response.json();if(!response.ok)throw new Error(data.detail||"Ошибка загрузки заказов");
+        if(!data.orders?.length){box.innerHTML="";return;}
+        box.innerHTML='<h3 style="color:#f5d779">Мои Proxy-заказы</h3>'+data.orders.map(o=>{
+          const link=o.connection_url?'<div class="orderline">🔗 <a href="'+escapeHtml(o.connection_url)+'" style="color:#f4cc67">Ссылка подключения</a></div>':'';
+          return '<div class="orderline"><b>Заказ №'+o.order_id+'</b><br>'+escapeHtml(o.title)+' · '+o.price_rub+' ₽<br>Статус: '+escapeHtml(o.status)+link+'</div>';
+        }).join("");
+      }catch(_){}
+    }
     let steamPaymentMethod = "sbp";
     let steamCurrentOrderId = null;
     function updateSteamTotal(){
@@ -873,6 +988,39 @@
       }catch(e){status.textContent=e.message||"Ошибка обновления статуса.";}
     }
 
+
+    async function loadProxyAdminOrders(){
+      const host=document.getElementById("proxyAdminOrders"),status=document.getElementById("proxyAdminStatus");
+      if(!tg?.initData){status.textContent="Открой Mini App под аккаунтом администратора.";return;}
+      status.textContent="Загружаю Proxy-заказы…";
+      try{
+        const response=await fetch(API_BASE+"/api/admin/proxy/orders?initData="+encodeURIComponent(tg.initData),{cache:"no-store"});
+        const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось загрузить Proxy-заказы");
+        const orders=data.orders||[];
+        status.textContent="Всего Proxy-заказов: "+orders.length+" · заявок об оплате: "+orders.filter(o=>o.status==="Оплата заявлена").length;
+        host.innerHTML=orders.length?orders.map(o=>{
+          const when=o.created_at?new Date(o.created_at+"Z").toLocaleString():"";
+          const canConfirm=["Оплата заявлена","Оплачен"].includes(o.status);
+          return '<div style="padding:13px;border:1px solid '+(canConfirm?"#d7a93b":"#6e5426")+';border-radius:13px;background:#151322">'+
+            '<b>🌐 Proxy-заказ #'+o.order_id+'</b><br>'+
+            'Покупатель: '+(o.username?"@"+escapeHtml(o.username):"без username")+' · ID '+o.user_id+'<br>'+
+            'Товар: <b>'+escapeHtml(o.title)+'</b> · <b>'+o.price_rub+' ₽</b><br>'+
+            'Статус: <b>'+escapeHtml(o.status)+'</b><br><small>'+escapeHtml(when)+'</small>'+
+            (canConfirm?'<button type="button" style="margin-top:10px" onclick="confirmProxyPayment('+o.order_id+')">'+(o.status==="Оплачен"?"Повторить отправку ссылки":"Подтвердить оплату и выдать ссылку")+'</button>':'')+
+            '</div>';
+        }).join(""):'<div class="section-subtitle">Proxy-заказов пока нет.</div>';
+      }catch(e){status.textContent=e.message||"Ошибка загрузки Proxy-заказов.";}
+    }
+    async function confirmProxyPayment(orderId){
+      const status=document.getElementById("proxyAdminStatus");status.textContent="Подтверждаю оплату и отправляю ссылку…";
+      try{
+        const response=await fetch(API_BASE+"/api/admin/proxy/confirm-payment",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,order_id:orderId})});
+        const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось выдать Proxy");
+        status.textContent=data.already_issued?"Заказ уже выдан.":"Оплата подтверждена, ссылка отправлена покупателю.";
+        await loadProxyAdminOrders();
+      }catch(e){status.textContent=e.message||"Ошибка выдачи Proxy.";}
+    }
+
     async function loadStarsAdminOrders(){
       const host=document.getElementById("starsAdminOrders"),status=document.getElementById("starsAdminStatus");
       if(!tg?.initData){status.textContent="Открой Mini App в Telegram под аккаунтом администратора.";return;}
@@ -935,6 +1083,8 @@
     function showTab(tab){
       document.getElementById("shopPanel").style.display=tab==="shop"?"block":"none";
       document.getElementById("servicesPanel").style.display=tab==="services"?"block":"none";
+      document.getElementById("proxyPanel").style.display=tab==="proxy"?"block":"none";
+      document.getElementById("vpnPanel").style.display=tab==="vpn"?"block":"none";
       document.getElementById("steamPanel").style.display=tab==="steam"?"block":"none";
       document.getElementById("cartPanel").style.display=tab==="cart"?"block":"none";
       document.getElementById("profilePanel").style.display=tab==="profile"?"block":"none";
@@ -942,7 +1092,7 @@
       document.getElementById("analyticsPanel").style.display=tab==="analytics"?"block":"none";
       if(tab==="profile") renderProfile();
       if(tab==="cart") renderCart();
-      if(tab==="admin"){loadAdminDashboard();loadStarsAdminOrders();loadPremiumAdminOrders();loadSteamAdminOrders();}
+      if(tab==="admin"){loadAdminDashboard();loadStarsAdminOrders();loadPremiumAdminOrders();loadSteamAdminOrders();loadProxyAdminOrders();}
       if(tab==="analytics") loadAnalytics();
       window.scrollTo({top:0,behavior:"smooth"});
     }
