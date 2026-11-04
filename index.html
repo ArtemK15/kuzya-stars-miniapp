@@ -156,6 +156,13 @@
       .products { gap: 9px; }
       .gift-card, .premium-card { padding: 13px 8px; }
     }
+    .nav { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .proxy-card, .vpn-card { border:1px solid #6f5526; border-radius:18px; padding:17px; background:radial-gradient(ellipse at top right,#3b2b1645,transparent 60%),linear-gradient(145deg,#1b1929,#10101b); }
+    .proxy-card h3, .vpn-card h3 { margin:0 0 8px; color:#f5d779; }
+    .proxy-meta { display:flex; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px solid #393247; font-size:13px; }
+    .proxy-meta span { color:#aaa6c5; }
+    .proxy-card button:disabled { opacity:.65; cursor:not-allowed; filter:none; transform:none; box-shadow:none; }
+    @media (min-width:700px) { .nav { grid-template-columns:repeat(7,minmax(0,1fr)); } }
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
     }
@@ -463,6 +470,8 @@
   <nav class="nav">
     <button onclick="showTab('shop')">🏠 Магазин</button>
     <button onclick="showTab('services')">🎮 Все игры и сервисы</button>
+    <button onclick="showTab('proxy')">🌐 Proxy</button>
+    <button onclick="showTab('vpn')">🛡 VPN</button>
     <button onclick="showTab('cart')">🛒 Корзина <span id="cartCount">0</span></button>
     <button onclick="showTab('profile')">👤 Кабинет</button>
     <button id="analyticsNavButton" onclick="showTab('analytics')" style="display:none">📊 Статистика</button>
@@ -483,6 +492,44 @@
         <button type="button" style="margin-top:14px" onclick="showSteamPage()">Открыть Steam</button>
       </div>
     </div>
+  </section>
+  <section class="profile" id="proxyPanel">
+    <h2>🌐 MTProto Proxy Germany</h2>
+    <p class="section-subtitle">Выбери сервер. Все три варианта доступны без ограничения количества подключений. Доступ рассчитан на 14 дней.</p>
+    <div class="products" style="grid-template-columns:1fr">
+      <article class="proxy-card">
+        <h3>🇩🇪 Proxy Germany¹</h3>
+        <div class="proxy-meta"><span>Стоимость</span><b>30 ₽</b></div>
+        <div class="proxy-meta"><span>Срок доступа</span><b>14 дней</b></div>
+        <div class="proxy-meta"><span>Лимит продаж</span><b>Без ограничений</b></div>
+        <button type="button" disabled>Покупка подключается</button>
+      </article>
+      <article class="proxy-card">
+        <h3>🇩🇪 Proxy Germany²</h3>
+        <div class="proxy-meta"><span>Стоимость</span><b>30 ₽</b></div>
+        <div class="proxy-meta"><span>Срок доступа</span><b>14 дней</b></div>
+        <div class="proxy-meta"><span>Лимит продаж</span><b>Без ограничений</b></div>
+        <button type="button" disabled>Покупка подключается</button>
+      </article>
+      <article class="proxy-card">
+        <h3>🇩🇪 Proxy Germany³</h3>
+        <div class="proxy-meta"><span>Стоимость</span><b>30 ₽</b></div>
+        <div class="proxy-meta"><span>Срок доступа</span><b>14 дней</b></div>
+        <div class="proxy-meta"><span>Лимит продаж</span><b>Без ограничений</b></div>
+        <button type="button" disabled>Покупка подключается</button>
+      </article>
+    </div>
+    <p class="section-subtitle" style="margin-top:14px">Ссылки подключения будут выдаваться только после подтверждения оплаты. Сейчас они не публикуются в открытом каталоге.</p>
+    <button type="button" class="secondary" onclick="showTab('shop')">← Назад в магазин</button>
+  </section>
+  <section class="profile" id="vpnPanel">
+    <h2>🛡 VPN</h2>
+    <div class="vpn-card">
+      <h3>VPN-подписки</h3>
+      <p class="section-subtitle">Раздел подготовлен. Тарифы, подключение и автоматическая выдача VPN-конфигураций появятся после настройки VPN-сервера.</p>
+      <span class="badge" style="display:inline-block;padding:5px 10px;border:1px solid #6f5526;border-radius:999px;color:#f5d779;font-size:11px">Скоро запуск</span>
+    </div>
+    <button type="button" class="secondary" onclick="showTab('shop')">← Назад в магазин</button>
   </section>
   <section class="profile" id="steamPanel">
     <h2>🎮 Пополнение Steam</h2>
@@ -935,6 +982,8 @@
     function showTab(tab){
       document.getElementById("shopPanel").style.display=tab==="shop"?"block":"none";
       document.getElementById("servicesPanel").style.display=tab==="services"?"block":"none";
+      document.getElementById("proxyPanel").style.display=tab==="proxy"?"block":"none";
+      document.getElementById("vpnPanel").style.display=tab==="vpn"?"block":"none";
       document.getElementById("steamPanel").style.display=tab==="steam"?"block":"none";
       document.getElementById("cartPanel").style.display=tab==="cart"?"block":"none";
       document.getElementById("profilePanel").style.display=tab==="profile"?"block":"none";
