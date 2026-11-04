@@ -496,30 +496,43 @@
   <section class="profile" id="proxyPanel">
     <h2>🌐 MTProto Proxy Germany</h2>
     <p class="section-subtitle">Выбери сервер. Все три варианта доступны без ограничения количества продаж. Покупка однократная, без срока окончания доступа.</p>
+    <div style="padding:14px;border:1px solid #51452f;border-radius:14px;margin:12px 0;background:#171522">
+      <div style="font-weight:bold;margin-bottom:8px">Способ оплаты</div>
+      <select id="proxyPaymentMethod" style="width:100%;padding:12px;border-radius:10px;background:#0b0b18;color:#fff;border:1px solid #6f5526">
+        <option value="sbp">СБП</option>
+        <option value="tbank">Карта Т-Банка</option>
+        <option value="sber">Карта Сбера</option>
+      </select>
+      <p class="section-subtitle" style="margin:8px 0 0">Оплата проверяется вручную. Ссылка подключения выдаётся после подтверждения администратором.</p>
+    </div>
     <div class="products" style="grid-template-columns:1fr">
       <article class="proxy-card">
         <h3>🇩🇪 Proxy Germany¹</h3>
         <div class="proxy-meta"><span>Стоимость</span><b>30 ₽</b></div>
         <div class="proxy-meta"><span>Срок доступа</span><b>Без ограничения по времени</b></div>
         <div class="proxy-meta"><span>Лимит продаж</span><b>Без ограничений</b></div>
-        <button type="button" disabled>Покупка подключается</button>
+        <button type="button" onclick="createProxyOrder('germany_1')">Купить за 30 ₽</button>
       </article>
       <article class="proxy-card">
         <h3>🇩🇪 Proxy Germany²</h3>
         <div class="proxy-meta"><span>Стоимость</span><b>30 ₽</b></div>
         <div class="proxy-meta"><span>Срок доступа</span><b>Без ограничения по времени</b></div>
         <div class="proxy-meta"><span>Лимит продаж</span><b>Без ограничений</b></div>
-        <button type="button" disabled>Покупка подключается</button>
+        <button type="button" onclick="createProxyOrder('germany_2')">Купить за 30 ₽</button>
       </article>
       <article class="proxy-card">
         <h3>🇩🇪 Proxy Germany³</h3>
         <div class="proxy-meta"><span>Стоимость</span><b>30 ₽</b></div>
         <div class="proxy-meta"><span>Срок доступа</span><b>Без ограничения по времени</b></div>
         <div class="proxy-meta"><span>Лимит продаж</span><b>Без ограничений</b></div>
-        <button type="button" disabled>Покупка подключается</button>
+        <button type="button" onclick="createProxyOrder('germany_3')">Купить за 30 ₽</button>
       </article>
     </div>
     <p class="section-subtitle" style="margin-top:14px">После подтверждения оплаты покупатель получит ссылку подключения выбранного прокси. Срок действия подписки не ограничивается. Ссылки не публикуются в открытом каталоге.</p>
+    <div id="proxyOrderStatus" class="section-subtitle" style="margin-top:12px"></div>
+    <div id="proxyPaymentDetails" style="display:none;text-align:left;margin-top:12px"></div>
+    <button id="proxyPaidButton" type="button" style="display:none" onclick="reportProxyPayment()">Я оплатил</button>
+    <div id="proxyMyOrders" style="margin-top:14px"></div>
     <button type="button" class="secondary" onclick="showTab('shop')">← Назад в магазин</button>
   </section>
   <section class="profile" id="vpnPanel">
@@ -833,6 +846,56 @@
     let invoiceBusy = false;
     let giftCart = JSON.parse(localStorage.getItem("kuzyaGiftCart") || "[]");
     function saveCart(){localStorage.setItem("kuzyaGiftCart",JSON.stringify(giftCart));renderCart();}
+    let proxyCurrentOrderId = null;
+    async function createProxyOrder(proxyKey){
+      const status=document.getElementById("proxyOrderStatus");
+      const details=document.getElementById("proxyPaymentDetails");
+      const paidButton=document.getElementById("proxyPaidButton");
+      details.style.display="none";details.innerHTML="";paidButton.style.display="none";
+      proxyCurrentOrderId=null;
+      if(!tg?.initData){status.textContent="Открой Mini App внутри Telegram, чтобы оформить заказ.";return;}
+      status.textContent="Создаю заказ…";
+      try{
+        const paymentMethod=document.getElementById("proxyPaymentMethod").value;
+        const response=await fetch(API_BASE+"/api/proxy/orders",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,proxy_key:proxyKey,payment_method:paymentMethod})});
+        const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось создать заказ");
+        proxyCurrentOrderId=data.order_id;
+        const p=data.payment||{};
+        let html='<div class="orderline"><b>Proxy-заказ №'+data.order_id+'</b><br>'+data.price_rub+' ₽</div>';
+        if(p.type==="sbp"){
+          html+='<div class="orderline">Оплата через СБП<br>'+(p.url?'<a href="'+escapeHtml(p.url)+'" target="_blank" rel="noopener" style="color:#f4cc67">Перейти к оплате</a>':'Ссылка СБП не настроена.')+'</div>';
+        }else{
+          html+='<div class="orderline">Перевод на карту '+escapeHtml(p.bank||"")+'<br><b>'+escapeHtml(p.card_number||"")+'</b></div>';
+        }
+        details.innerHTML=html;details.style.display="block";paidButton.style.display="block";
+        status.textContent="Заказ создан. Переведи ровно 30 ₽, затем нажми «Я оплатил».";
+        await loadMyProxyOrders();
+      }catch(e){status.textContent=e.message||"Ошибка создания заказа.";}
+    }
+    async function reportProxyPayment(){
+      const status=document.getElementById("proxyOrderStatus");
+      if(!proxyCurrentOrderId||!tg?.initData)return;
+      const button=document.getElementById("proxyPaidButton");button.disabled=true;
+      status.textContent="Отправляю уведомление…";
+      try{
+        const response=await fetch(API_BASE+"/api/proxy/payment-reported",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,order_id:proxyCurrentOrderId})});
+        const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось отправить уведомление");
+        status.textContent="✅ Заявка об оплате отправлена. После проверки администратором ссылка подключения появится в заказе и придёт в Telegram.";
+        button.style.display="none";await loadMyProxyOrders();
+      }catch(e){status.textContent=e.message||"Ошибка отправки.";button.disabled=false;}
+    }
+    async function loadMyProxyOrders(){
+      const box=document.getElementById("proxyMyOrders");if(!box||!tg?.initData)return;
+      try{
+        const response=await fetch(API_BASE+"/api/proxy/my-orders?initData="+encodeURIComponent(tg.initData));
+        const data=await response.json();if(!response.ok)throw new Error(data.detail||"Ошибка загрузки заказов");
+        if(!data.orders?.length){box.innerHTML="";return;}
+        box.innerHTML='<h3 style="color:#f5d779">Мои Proxy-заказы</h3>'+data.orders.map(o=>{
+          const link=o.connection_url?'<div class="orderline">🔗 <a href="'+escapeHtml(o.connection_url)+'" style="color:#f4cc67">Ссылка подключения</a></div>':'';
+          return '<div class="orderline"><b>Заказ №'+o.order_id+'</b><br>'+escapeHtml(o.title)+' · '+o.price_rub+' ₽<br>Статус: '+escapeHtml(o.status)+link+'</div>';
+        }).join("");
+      }catch(_){}
+    }
     let steamPaymentMethod = "sbp";
     let steamCurrentOrderId = null;
     function updateSteamTotal(){
