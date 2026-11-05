@@ -471,7 +471,7 @@
     <button onclick="showTab('shop')">🏠 Магазин</button>
     <button onclick="showTab('services')">🎮 Все игры и сервисы</button>
     <button onclick="showTab('proxy')">🌐 Proxy</button>
-    <!-- VPN navigation is intentionally hidden until the VPN product is launched. -->
+    <button onclick="showTab('vpn')">🛡 VPN</button>
     <button onclick="showTab('cart')">🛒 Корзина <span id="cartCount">0</span></button>
     <button onclick="showTab('profile')">👤 Кабинет</button>
     <button id="analyticsNavButton" onclick="showTab('analytics')" style="display:none">📊 Статистика</button>
@@ -536,12 +536,36 @@
     <button type="button" class="secondary" onclick="showTab('shop')">← Назад в магазин</button>
   </section>
   <section class="profile" id="vpnPanel">
-    <h2>🛡 VPN</h2>
-    <div class="vpn-card">
-      <h3>VPN-подписки</h3>
-      <p class="section-subtitle">Раздел подготовлен. Тарифы, подключение и автоматическая выдача VPN-конфигураций появятся после настройки VPN-сервера.</p>
-      <span class="badge" style="display:inline-block;padding:5px 10px;border:1px solid #6f5526;border-radius:999px;color:#f5d779;font-size:11px">Скоро запуск</span>
+    <h2>🛡 VPN-подписки</h2>
+    <p class="section-subtitle">Выбери удобный срок подписки. На длительные тарифы действуют специальные цены со скидкой.</p>
+    <div class="products" style="grid-template-columns:1fr">
+      <article class="vpn-card">
+        <h3>1 месяц</h3>
+        <div class="proxy-meta"><span>Обычная цена</span><b><s>449 ₽</s></b></div>
+        <div class="proxy-meta"><span>Скидка</span><b>15%</b></div>
+        <div class="proxy-meta"><span>Цена для клиента</span><b style="color:#f5d779;font-size:20px">382 ₽</b></div>
+      </article>
+      <article class="vpn-card">
+        <h3>3 месяца</h3>
+        <div class="proxy-meta"><span>Обычная цена</span><b><s>999 ₽</s></b></div>
+        <div class="proxy-meta"><span>Скидка</span><b>20%</b></div>
+        <div class="proxy-meta"><span>Цена для клиента</span><b style="color:#f5d779;font-size:20px">799 ₽</b></div>
+      </article>
+      <article class="vpn-card">
+        <h3>6 месяцев</h3>
+        <div class="proxy-meta"><span>Обычная цена</span><b><s>1 899 ₽</s></b></div>
+        <div class="proxy-meta"><span>Скидка</span><b>25%</b></div>
+        <div class="proxy-meta"><span>Цена для клиента</span><b style="color:#f5d779;font-size:20px">1 424 ₽</b></div>
+      </article>
+      <article class="vpn-card">
+        <h3>12 месяцев</h3>
+        <div class="proxy-meta"><span>Обычная цена</span><b><s>2 999 ₽</s></b></div>
+        <div class="proxy-meta"><span>Скидка</span><b>28%</b></div>
+        <div class="proxy-meta"><span>Цена для клиента</span><b style="color:#f5d779;font-size:20px">2 159 ₽</b></div>
+      </article>
     </div>
+    <p class="section-subtitle" style="margin-top:14px">Продажа и автоматическая выдача VPN-подписки станут доступны после завершения подключения VPN API.</p>
+    <span class="badge" style="display:inline-block;padding:5px 10px;border:1px solid #6f5526;border-radius:999px;color:#f5d779;font-size:11px">Скоро запуск</span>
     <button type="button" class="secondary" onclick="showTab('shop')">← Назад в магазин</button>
   </section>
   <section class="profile" id="steamPanel">
