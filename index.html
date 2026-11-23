@@ -552,9 +552,6 @@
   <section class="profile" id="vpnPanel">
     <h2>🛡 VPN-подписки</h2>
     <p class="section-subtitle">Выбери тариф. В стандартных подписках доступны все перечисленные серверы; бюджетный тариф ограничен одним сервером.</p>
-    <div class="products" style="grid-template-columns:1fr">
-      <div id="vpnStandardCatalog" style="display:grid;gap:14px"></div>
-    </div>
     <div id="vpnPaymentChooser" style="margin-top:16px;padding:15px;border:1px solid #6f5526;border-radius:15px;background:#171522">
       <div style="font-weight:700;margin-bottom:10px">Способ оплаты</div>
       <div class="payment-methods" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
@@ -563,6 +560,9 @@
         <button type="button" id="vpnSberMethodButton" class="payment-method" onclick="selectVpnPaymentMethod('sber')">💚 Карта Сбера</button>
       </div>
       <div class="section-subtitle" style="margin-top:9px">После выбора тарифа появятся реквизиты для перевода. Оплата проверяется вручную.</div>
+    </div>
+    <div class="products" style="grid-template-columns:1fr">
+      <div id="vpnStandardCatalog" style="display:grid;gap:14px"></div>
     </div>
     <div id="vpnOrderStatus" class="section-subtitle" style="margin-top:10px"></div>
     <section id="vpnCheckoutScreen" style="display:none;margin-top:16px;padding:15px;border:1px solid #6f5526;border-radius:15px;background:#171522;text-align:center">
