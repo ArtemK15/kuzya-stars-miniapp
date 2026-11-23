@@ -2353,9 +2353,20 @@
         const orders=data.orders||[];
         box.innerHTML='<h3 style="color:#f5d779">Мои VPN-подписки</h3>'+(orders.length?orders.map(o=>{
           const link=o.subscription_url?'<div class="orderline">🔗 <a href="'+escapeHtml(o.subscription_url)+'" target="_blank" rel="noopener" style="color:#f4cc67">Получить ссылку подключения</a></div>':'';
-          return '<div class="orderline" style="padding:12px;border:1px solid #6e5426;border-radius:12px"><b>Заказ №'+o.order_id+'</b><br>'+escapeHtml(o.title)+' · '+o.price_rub+' ₽<br>Статус: '+escapeHtml(o.status)+'<br>Действует до: '+escapeHtml(o.expires_at||"пока не выдано")+link+'</div>';
+          const canCancel=["Ожидает оплаты","Оплата заявлена"].includes(o.status);
+          const cancel=canCancel?'<button type="button" class="secondary" style="margin-top:9px" onclick="cancelMyVpnOrder('+o.order_id+')">❌ Отменить заказ</button>':'';
+          return '<div class="orderline" style="padding:12px;border:1px solid #6e5426;border-radius:12px"><b>Заказ №'+o.order_id+'</b><br>'+escapeHtml(o.title)+' · '+o.price_rub+' ₽<br>Статус: '+escapeHtml(o.status)+'<br>Действует до: '+escapeHtml(o.expires_at||"пока не выдано")+link+cancel+'</div>';
         }).join(""):'<div class="section-subtitle">VPN-заказов пока нет.</div>');
       }catch(e){box.textContent=e.message||"Не удалось загрузить подписки.";}
+    }
+    async function cancelMyVpnOrder(orderId){
+      if(!confirm("Отменить VPN-заказ №"+orderId+"?"))return;
+      try{
+        const response=await fetch(API_BASE+"/api/vpn/cancel-order",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,order_id:orderId})});
+        const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось отменить заказ");
+        if(tg?.showAlert)tg.showAlert("Заказ №"+orderId+" отменён.");else alert("Заказ №"+orderId+" отменён.");
+        await loadMyVpnOrders();
+      }catch(e){if(tg?.showAlert)tg.showAlert(e.message||"Ошибка отмены.");else alert(e.message||"Ошибка отмены.");}
     }
     function resetVpnCatalogForm(){["vpnEditPlanCode","vpnEditTitle","vpnEditDescription","vpnEditOldPrice","vpnEditSubscriptionUrl","vpnEditPrice","vpnEditTariffId"].forEach(id=>document.getElementById(id).value="");document.getElementById("vpnEditMonths").value="1";document.getElementById("vpnEditActive").checked=true;}
     async function loadVpnCatalogAdmin(){
@@ -2424,7 +2435,9 @@
           const when=o.created_at?new Date(o.created_at+"Z").toLocaleString():"";
           const canIssue=["Оплата заявлена","Ошибка выдачи"].includes(o.status);
           const link=o.subscription_url?'<div style="margin-top:10px;padding:10px;border:1px solid #6e5426;border-radius:10px;background:#0b0b18;overflow-wrap:anywhere"><div style="color:#f5d779;font-weight:700;margin-bottom:6px">🔗 Ссылка подключения клиента</div><a href="'+escapeHtml(o.subscription_url)+'" target="_blank" rel="noopener noreferrer" style="color:#cbb7ff;word-break:break-all">'+escapeHtml(o.subscription_url)+'</a><button type="button" class="secondary" style="margin-top:8px" onclick="copyVpnSubscriptionLink(\''+encodeURIComponent(o.subscription_url)+'\')">📋 Скопировать ссылку</button></div>':'';
-          return '<div style="padding:13px;border:1px solid '+(canIssue?"#d7a93b":"#6e5426")+';border-radius:13px;background:#151322"><b>🛡 VPN-заказ #'+o.order_id+'</b><br>Покупатель: '+(o.username?"@"+escapeHtml(o.username):"без username")+' · ID '+o.user_id+'<br>Тариф: <b>'+escapeHtml(o.title)+'</b> · '+o.price_rub+' ₽<br>Статус: <b>'+escapeHtml(o.status)+'</b><br>Ключ: '+escapeHtml(o.key_id||"не выдан")+'<br>До: '+escapeHtml(o.expires_at||"—")+'<br><small>'+escapeHtml(when)+'</small>'+(o.error?'<br><small style="color:#ff9a9a">'+escapeHtml(o.error)+'</small>':'')+link+(canIssue?'<button type="button" style="margin-top:10px" onclick="confirmVpnPayment('+o.order_id+')">Подтвердить оплату и выдать VPN</button>':'')+'</div>';
+          const canManualSend=["Оплата заявлена","Выдан"].includes(o.status);
+          const manualSend=canManualSend?'<div style="margin-top:10px"><input id="vpnManualLink'+o.order_id+'" type="url" maxlength="2000" placeholder="Вставь ссылку VPN для этого клиента" value="'+escapeHtml(o.subscription_url||"")+'" style="width:100%;padding:11px;box-sizing:border-box;background:#0b0b18;color:#fff;border:1px solid #49405e;border-radius:9px"><button type="button" class="secondary" style="margin-top:7px" onclick="sendManualVpnLink('+o.order_id+')">📨 Отправить ссылку клиенту</button></div>':'';
+          return '<div style="padding:13px;border:1px solid '+(canIssue?"#d7a93b":"#6e5426")+';border-radius:13px;background:#151322"><b>🛡 VPN-заказ #'+o.order_id+'</b><br>Покупатель: '+(o.username?"@"+escapeHtml(o.username):"без username")+' · ID '+o.user_id+'<br>Тариф: <b>'+escapeHtml(o.title)+'</b> · '+o.price_rub+' ₽<br>Статус: <b>'+escapeHtml(o.status)+'</b><br>Ключ: '+escapeHtml(o.key_id||"не выдан")+'<br>До: '+escapeHtml(o.expires_at||"—")+'<br><small>'+escapeHtml(when)+'</small>'+(o.error?'<br><small style="color:#ff9a9a">'+escapeHtml(o.error)+'</small>':'')+link+manualSend+(canIssue?'<button type="button" style="margin-top:10px" onclick="confirmVpnPayment('+o.order_id+')">Подтвердить оплату и выдать VPN</button>':'')+'</div>';
         }).join(""):'<div class="section-subtitle">VPN-заказов пока нет.</div>';
       }catch(e){status.textContent=e.message||"Ошибка загрузки VPN-заказов.";}
     }
@@ -2432,6 +2445,20 @@
       const url=decodeURIComponent(encoded);
       try{await navigator.clipboard.writeText(url);if(tg?.showAlert)tg.showAlert("Ссылка подключения скопирована.");else alert("Ссылка подключения скопирована.");}
       catch(e){window.prompt("Скопируй ссылку подключения:",url);}
+    }
+    async function sendManualVpnLink(orderId){
+      const status=document.getElementById("vpnAdminStatus");
+      const input=document.getElementById("vpnManualLink"+orderId);
+      const subscription_url=(input?.value||"").trim();
+      if(!subscription_url){status.textContent="Вставь ссылку VPN для клиента.";return;}
+      if(!confirm("Отправить эту VPN-ссылку клиенту по заказу №"+orderId+"?"))return;
+      status.textContent="Отправляю VPN-ссылку клиенту…";
+      try{
+        const response=await fetch(API_BASE+"/api/admin/vpn/send-link",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,order_id:orderId,subscription_url})});
+        const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось отправить ссылку");
+        status.textContent="✅ Ссылка отправлена клиенту в Telegram.";
+        await loadVpnAdminOrders();
+      }catch(e){status.textContent=e.message||"Ошибка отправки VPN-ссылки.";}
     }
     async function confirmVpnPayment(orderId){
       const status=document.getElementById("vpnAdminStatus");status.textContent="Проверяю и выдаю VPN через HiddifySales…";
