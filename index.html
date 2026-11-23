@@ -544,24 +544,28 @@
         <div class="proxy-meta"><span>Обычная цена</span><b><s>449 ₽</s></b></div>
         <div class="proxy-meta"><span>Скидка</span><b>15%</b></div>
         <div class="proxy-meta"><span>Цена для клиента</span><b style="color:#f5d779;font-size:20px">382 ₽</b></div>
+        <button type="button" style="margin-top:12px" onclick="createVpnOrder(1)">Купить на 1 месяц</button>
       </article>
       <article class="vpn-card">
         <h3>3 месяца</h3>
         <div class="proxy-meta"><span>Обычная цена</span><b><s>999 ₽</s></b></div>
         <div class="proxy-meta"><span>Скидка</span><b>20%</b></div>
         <div class="proxy-meta"><span>Цена для клиента</span><b style="color:#f5d779;font-size:20px">799 ₽</b></div>
+        <button type="button" style="margin-top:12px" onclick="createVpnOrder(3)">Купить на 3 месяца</button>
       </article>
       <article class="vpn-card">
         <h3>6 месяцев</h3>
         <div class="proxy-meta"><span>Обычная цена</span><b><s>1 899 ₽</s></b></div>
         <div class="proxy-meta"><span>Скидка</span><b>25%</b></div>
         <div class="proxy-meta"><span>Цена для клиента</span><b style="color:#f5d779;font-size:20px">1 424 ₽</b></div>
+        <button type="button" style="margin-top:12px" onclick="createVpnOrder(6)">Купить на 6 месяца</button>
       </article>
       <article class="vpn-card">
         <h3>12 месяцев</h3>
         <div class="proxy-meta"><span>Обычная цена</span><b><s>2 999 ₽</s></b></div>
         <div class="proxy-meta"><span>Скидка</span><b>28%</b></div>
         <div class="proxy-meta"><span>Цена для клиента</span><b style="color:#f5d779;font-size:20px">2 159 ₽</b></div>
+        <button type="button" style="margin-top:12px" onclick="createVpnOrder(12)">Купить на 12 месяца</button>
       </article>
     </div>
     <div style="margin-top:16px;padding:15px;border:1px solid #6f5526;border-radius:15px;background:#171522">
@@ -1132,6 +1136,7 @@
       document.getElementById("adminPanel").style.display=tab==="admin"?"block":"none";
       document.getElementById("analyticsPanel").style.display=tab==="analytics"?"block":"none";
       if(tab==="profile") renderProfile();
+      if(tab==="vpn") loadMyVpnOrders();
       if(tab==="cart") renderCart();
       if(tab==="admin"){loadAdminDashboard();loadStarsAdminOrders();loadPremiumAdminOrders();loadSteamAdminOrders();loadProxyAdminOrders();loadVpnAdminOrders();}
       if(tab==="analytics") loadAnalytics();
