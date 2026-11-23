@@ -158,17 +158,20 @@
     }
     .nav { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .proxy-card { border:1px solid #6f5526; border-radius:18px; padding:17px; background:radial-gradient(ellipse at top right,#3b2b1645,transparent 60%),linear-gradient(145deg,#1b1929,#10101b); }
-    .vpn-card { display:flex; flex-direction:column; min-width:0; min-height:100%; box-sizing:border-box; padding:24px 22px 20px; border:1px solid #292d3b; border-radius:17px; background:linear-gradient(155deg,#101522 0%,#0b101a 65%,#0a0e17 100%); box-shadow:0 10px 26px rgba(0,0,0,.18); }
-    .vpn-card h3 { margin:0 0 10px; color:#f7f8fc; font-size:18px; line-height:1.35; }
-    .vpn-card .section-subtitle { color:#91a9c9; line-height:1.5; margin:0 0 13px; }
-    .vpn-card .vpn-price { margin:4px 0 17px; color:#fff; font-size:30px; line-height:1.2; font-weight:800; letter-spacing:-.5px; }
-    .vpn-card .vpn-price small { color:#7890b2; font-size:13px; font-weight:500; letter-spacing:0; }
-    .vpn-card .proxy-meta { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid #252c39; font-size:13px; }
-    .vpn-card .proxy-meta span { color:#a5b6cf; }
-    .vpn-card .vpn-card-spacer { flex:1; min-height:18px; }
-    .vpn-card button { width:100%; min-height:54px; margin-top:18px !important; border:0; border-radius:12px; background:linear-gradient(105deg,#08b887,#32d49e); color:#031b19; font-size:15px; font-weight:750; box-shadow:0 8px 24px rgba(14,193,142,.18); }
+    .vpn-card { position:relative; display:flex; flex-direction:column; min-width:0; min-height:100%; box-sizing:border-box; padding:22px 20px 18px; border:1px solid #dfe3e8; border-radius:16px; background:#fff; color:#101827; box-shadow:0 2px 8px rgba(15,23,42,.04); }
+    .vpn-card h3 { margin:0 0 12px; color:#111827; font-size:17px; line-height:1.35; font-weight:750; }
+    .vpn-card .section-subtitle { color:#58677d; line-height:1.5; margin:0 0 12px; }
+    .vpn-card .vpn-price { margin:5px 0 5px; color:#111827; font-size:29px; line-height:1.2; font-weight:800; letter-spacing:-.5px; }
+    .vpn-card .vpn-price small { color:#65758b; font-size:13px; font-weight:500; letter-spacing:0; }
+    .vpn-card .vpn-monthly { color:#718096; font-size:12px; margin:0 0 13px; }
+    .vpn-card .proxy-meta { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 0; border:0; font-size:13px; }
+    .vpn-card .proxy-meta span { color:#344256; }
+    .vpn-card .vpn-features { display:grid; gap:8px; margin:7px 0 16px; color:#172235; font-size:13px; line-height:1.45; }
+    .vpn-card .vpn-feature:before { content:"✓"; color:#079b8c; font-weight:800; margin-right:9px; }
+    .vpn-card .vpn-card-spacer { flex:1; min-height:14px; }
+    .vpn-card button { width:100%; min-height:48px; margin-top:14px !important; border:1px solid #d9dee6; border-radius:10px; background:#fff; color:#111827; font-size:14px; font-weight:650; box-shadow:none; }
     .vpn-card button:active { transform:translateY(1px); }
-    #vpnStandardCatalog { display:grid !important; grid-template-columns:repeat(4,minmax(0,1fr)); gap:18px !important; align-items:stretch; }
+    #vpnStandardCatalog { display:grid !important; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px !important; align-items:stretch; }
     @media (max-width:1100px) { #vpnStandardCatalog { grid-template-columns:repeat(3,minmax(0,1fr)); } }
     @media (max-width:800px) { #vpnStandardCatalog { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px !important; } .vpn-card { padding:18px 15px; } }
     @media (max-width:520px) { #vpnStandardCatalog { grid-template-columns:1fr; } }
@@ -2329,21 +2332,22 @@
         const data=await response.json();
         if(!response.ok)throw new Error(data.detail||"Не удалось загрузить VPN-каталог");
         const items=(data.items||[]).filter(p=>p.active!==false);
-        host.innerHTML=items.map(p=>{
+        host.innerHTML=items.map((p,index)=>{
           const price=Number(p.price_rub)||0,old=Number(p.old_price_rub)||0;
           const saving=Math.max(0,old-price);
           const discount=old>price?((saving/old)*100).toFixed(0):"";
-          const badge=p.badge?'<div style="align-self:flex-start;display:inline-flex;padding:4px 10px;margin-bottom:10px;border:1px solid #d8ad45;border-radius:20px;color:#f5d779;font-size:11px;letter-spacing:1px;font-weight:800">'+escapeHtml(p.badge)+'</div>':'';
           const period=p.period_label||((Number(p.months)>0)?p.months+' мес.':'—');
-          const button=p.button_label||'Оформить подписку';
-          const oldPrice=old>price?'<span style="margin-left:8px;color:#8092ad;font-size:13px;font-weight:500;text-decoration:line-through">'+old.toLocaleString("ru-RU")+' ₽</span>':'';
-          const discountBadge=old>price?'<span style="display:inline-flex;margin:0 0 8px;padding:4px 9px;border-radius:20px;background:#08b987;color:#05231c;font-size:11px;font-weight:800">-'+discount+'%</span>':'';
-          const traffic=p.traffic?'<div class="proxy-meta"><span>Трафик</span><b>'+escapeHtml(p.traffic)+'</b></div>':'';
-          const details=(p.description?'<p class="section-subtitle">'+escapeHtml(p.description)+'</p>':'');
-          const priceBlock='<div class="vpn-price">'+price.toLocaleString("ru-RU")+' ₽'+oldPrice+' <small>/ '+escapeHtml(period)+'</small></div>';
-          const savings=old>price?'<div class="proxy-meta"><span>Экономия</span><b style="color:#24d49e">'+saving.toLocaleString("ru-RU")+' ₽ ('+discount+'%)</b></div>':'';
-          const purchase='<div class="vpn-card-spacer"></div><button type="button" onclick="createVpnOrder('+Number(p.months)+',\''+p.plan_code+'\')">'+escapeHtml(button)+'</button>';
-          return '<article class="vpn-card">'+discountBadge+badge+'<h3>'+escapeHtml(p.title)+'</h3>'+priceBlock+details+traffic+'<div class="proxy-meta"><span>Срок</span><b>'+escapeHtml(period)+'</b></div>'+savings+purchase+'</article>';
+          const button=p.button_label||'Выбрать';
+          const oldPrice=old>price?'<span style="margin-left:8px;color:#64748b;font-size:13px;font-weight:500;text-decoration:line-through">'+old.toLocaleString("ru-RU")+' ₽</span>':'';
+          const discountBadge=old>price?'<span style="display:inline-flex;margin:0 0 8px;padding:4px 9px;border-radius:20px;background:#dcfce7;color:#087b53;font-size:11px;font-weight:800">-'+discount+'%</span>':'';
+          const badge=p.badge?'<div style="align-self:flex-start;display:inline-flex;padding:4px 10px;margin-bottom:8px;border:1px solid #d8ad45;border-radius:20px;color:#8a5b00;background:#fff8df;font-size:11px;letter-spacing:1px;font-weight:800">'+escapeHtml(p.badge)+'</div>':'';
+          const monthly=Number(p.months)>1?'<div class="vpn-monthly">'+Math.round(price/Number(p.months)).toLocaleString("ru-RU")+' ₽ в месяц</div>':'';
+          const features=[];
+          if(p.traffic)features.push(escapeHtml(p.traffic)+' трафика');
+          if(p.description)features.push(escapeHtml(p.description));
+          const featureList=features.length?'<div class="vpn-features">'+features.map(x=>'<div class="vpn-feature">'+x+'</div>').join("")+'</div>':'';
+          const purchase='<div class="vpn-card-spacer"></div><button type="button" '+(index===0?'style="background:#0d9488;border-color:#0d9488;color:#fff"':'')+' onclick="createVpnOrder('+Number(p.months)+',\''+p.plan_code+'\')">'+escapeHtml(button)+'</button>';
+          return '<article class="vpn-card">'+discountBadge+badge+'<h3>'+escapeHtml(p.title)+'</h3><div class="vpn-price">'+price.toLocaleString("ru-RU")+' ₽'+oldPrice+'</div>'+monthly+featureList+purchase+'</article>';
         }).join("")||'<div class="section-subtitle">Сейчас нет доступных VPN-тарифов.</div>';
       }catch(e){host.textContent=e.message||"Не удалось загрузить тарифы.";}
     }
