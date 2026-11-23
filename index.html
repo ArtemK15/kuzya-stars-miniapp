@@ -2331,7 +2331,8 @@
         const response=await fetch(API_BASE+"/api/vpn/catalog",{cache:"no-store"});
         const data=await response.json();
         if(!response.ok)throw new Error(data.detail||"Не удалось загрузить VPN-каталог");
-        const items=(data.items||[]).filter(p=>p.active!==false);
+        const priority={singapore_exclusive:0,turkey4:1};
+        const items=(data.items||[]).filter(p=>p.active!==false).sort((a,b)=>(priority[a.plan_code]??2)-(priority[b.plan_code]??2));
         host.innerHTML=items.map((p,index)=>{
           const price=Number(p.price_rub)||0,old=Number(p.old_price_rub)||0;
           const saving=Math.max(0,old-price);
