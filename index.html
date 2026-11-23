@@ -557,42 +557,7 @@
         <div class="proxy-meta"><span>Цена для клиента</span><b style="color:#f5d779;font-size:20px">130 ₽</b></div>
         <button type="button" style="margin-top:12px" onclick="createVpnOrder(1,'turkey4')">Купить Turkey #4</button>
       </article>
-      <article class="vpn-card">
-        <h3>🌍 VPN bronze — 1 месяц</h3>
-        <p class="section-subtitle">Безлимитный трафик. Доступны все серверы: 🇧🇷 Brazil; 🇬🇧 United Kingdom (British 2); 🇨🇦 Canada (2); 🇫🇮 Finland (4); 🇫🇷 France (1); 🇩🇪 Germany (6); 🇭🇰 Hong Kong (2); 🇳🇱 Netherlands (4); 🇵🇱 Poland (2); 🇸🇬 Singapore (1); 🇹🇷 Turkey (3); 🇺🇸 United States (1).</p>
-        <div class="proxy-meta"><span>Трафик</span><b>Безлимит</b></div>
-        <div class="proxy-meta"><span>Обычная цена</span><b><s>449 ₽</s></b></div>
-        <div class="proxy-meta"><span>Скидка</span><b>33,18% · экономия 149 ₽</b></div>
-        <div class="proxy-meta"><span>Цена для клиента</span><b style="color:#f5d779;font-size:20px">300 ₽</b></div>
-        <button type="button" style="margin-top:12px" onclick="createVpnOrder(1,'standard')">Купить Standard на 1 месяц</button>
-      </article>
-      <article class="vpn-card">
-        <h3>🌍 VPN silver — 3 месяца</h3>
-        <p class="section-subtitle">Безлимитный трафик. Доступны все серверы: 🇧🇷 Brazil; 🇬🇧 United Kingdom (British 2); 🇨🇦 Canada (2); 🇫🇮 Finland (4); 🇫🇷 France (1); 🇩🇪 Germany (6); 🇭🇰 Hong Kong (2); 🇳🇱 Netherlands (4); 🇵🇱 Poland (2); 🇸🇬 Singapore (1); 🇹🇷 Turkey (3); 🇺🇸 United States (1).</p>
-        <div class="proxy-meta"><span>Трафик</span><b>Безлимит</b></div>
-        <div class="proxy-meta"><span>Обычная цена</span><b><s>999 ₽</s></b></div>
-        <div class="proxy-meta"><span>Скидка</span><b>39,94% · экономия 399 ₽</b></div>
-        <div class="proxy-meta"><span>Цена для клиента</span><b style="color:#f5d779;font-size:20px">600 ₽</b></div>
-        <button type="button" style="margin-top:12px" onclick="createVpnOrder(3,'standard')">Купить на 3 месяца</button>
-      </article>
-      <article class="vpn-card">
-        <h3>🌍 VPN gold — 6 месяцев</h3>
-        <p class="section-subtitle">Безлимитный трафик. Доступны все серверы: 🇧🇷 Brazil; 🇬🇧 United Kingdom (British 2); 🇨🇦 Canada (2); 🇫🇮 Finland (4); 🇫🇷 France (1); 🇩🇪 Germany (6); 🇭🇰 Hong Kong (2); 🇳🇱 Netherlands (4); 🇵🇱 Poland (2); 🇸🇬 Singapore (1); 🇹🇷 Turkey (3); 🇺🇸 United States (1).</p>
-        <div class="proxy-meta"><span>Трафик</span><b>Безлимит</b></div>
-        <div class="proxy-meta"><span>Обычная цена</span><b><s>1 899 ₽</s></b></div>
-        <div class="proxy-meta"><span>Скидка</span><b>42,07% · экономия 799 ₽</b></div>
-        <div class="proxy-meta"><span>Цена для клиента</span><b style="color:#f5d779;font-size:20px">1 100 ₽</b></div>
-        <button type="button" style="margin-top:12px" onclick="createVpnOrder(6,'standard')">Купить на 6 месяцев</button>
-      </article>
-      <article class="vpn-card">
-        <h3>🌍 VPN diamond — 12 месяцев</h3>
-        <p class="section-subtitle">Безлимитный трафик. Доступны все серверы: 🇧🇷 Brazil; 🇬🇧 United Kingdom (British 2); 🇨🇦 Canada (2); 🇫🇮 Finland (4); 🇫🇷 France (1); 🇩🇪 Germany (6); 🇭🇰 Hong Kong (2); 🇳🇱 Netherlands (4); 🇵🇱 Poland (2); 🇸🇬 Singapore (1); 🇹🇷 Turkey (3); 🇺🇸 United States (1).</p>
-        <div class="proxy-meta"><span>Трафик</span><b>Безлимит</b></div>
-        <div class="proxy-meta"><span>Обычная цена</span><b><s>2 999 ₽</s></b></div>
-        <div class="proxy-meta"><span>Скидка</span><b>39,98% · экономия 1 199 ₽</b></div>
-        <div class="proxy-meta"><span>Цена для клиента</span><b style="color:#f5d779;font-size:20px">1 800 ₽</b></div>
-        <button type="button" style="margin-top:12px" onclick="createVpnOrder(12,'standard')">Купить на 12 месяцев</button>
-      </article>
+      <div id="vpnStandardCatalog" style="display:grid;gap:14px"></div>
     </div>
     <div style="margin-top:16px;padding:15px;border:1px solid #6f5526;border-radius:15px;background:#171522">
       <label for="vpnPaymentMethod" style="display:block;margin-bottom:8px">Способ оплаты</label>
@@ -718,6 +683,18 @@
     <button type="button" class="secondary" onclick="loadProxyAdminOrders()">🔄 Обновить Proxy-заказы</button>
     <div id="proxyAdminStatus" class="section-subtitle" style="margin-top:8px"></div>
     <div id="proxyAdminOrders" style="display:grid;gap:10px;margin:12px 0"></div>
+    <h3>🛡 Управление VPN-тарифами</h3>
+    <p class="section-subtitle">Меняй название и цену, добавляй тарифы с tariff_id из HiddifySales и включай/отключай их. Изменения сохраняются в базе данных.</p>
+    <div style="padding:14px;border:1px solid #6f5526;border-radius:14px;background:#171522;margin:10px 0">
+      <input type="hidden" id="vpnEditPlanCode">
+      <label style="display:block;margin:6px 0">Название тарифа</label><input id="vpnEditTitle" maxlength="100" placeholder="Например, VPN platinum — 24 месяца" style="width:100%;padding:11px;background:#0b0b18;color:#fff;border:1px solid #49405e">
+      <label style="display:block;margin:10px 0 6px">Срок, месяцев</label><input id="vpnEditMonths" type="number" min="1" max="120" value="1" style="width:100%;padding:11px;background:#0b0b18;color:#fff;border:1px solid #49405e">
+      <label style="display:block;margin:10px 0 6px">Цена для клиента, ₽</label><input id="vpnEditPrice" type="number" min="1" max="1000000" placeholder="Например, 2500" style="width:100%;padding:11px;background:#0b0b18;color:#fff;border:1px solid #49405e">
+      <label style="display:block;margin:10px 0 6px">Hiddify tariff_id</label><input id="vpnEditTariffId" type="number" min="1" placeholder="ID тарифа из HiddifySales" style="width:100%;padding:11px;background:#0b0b18;color:#fff;border:1px solid #49405e">
+      <label style="display:flex;align-items:center;gap:8px;margin:12px 0;color:#ddd6ff"><input id="vpnEditActive" type="checkbox" checked style="width:auto"> Тариф включён</label>
+      <button type="button" onclick="saveVpnCatalogPlan()">💾 Сохранить тариф</button><button type="button" class="secondary" onclick="resetVpnCatalogForm()">＋ Новый тариф</button>
+      <div id="vpnCatalogAdminStatus" class="section-subtitle" style="margin-top:8px"></div>
+    </div><div id="vpnCatalogAdminList" style="display:grid;gap:9px;margin:12px 0"></div>
     <h3>🛡 VPN HiddifySales</h3>
     <p class="section-subtitle">Проверка партнёрского баланса, тарифов и выдача оплаченных VPN-подписок.</p>
     <button type="button" class="secondary" onclick="loadVpnPartnerInfo()">🔎 Проверить API, тарифы и баланс</button>
@@ -1164,7 +1141,7 @@
       if(tab==="profile") renderProfile();
       if(tab==="vpn") loadMyVpnOrders();
       if(tab==="cart") renderCart();
-      if(tab==="admin"){loadAdminDashboard();loadStarsAdminOrders();loadPremiumAdminOrders();loadSteamAdminOrders();loadProxyAdminOrders();loadVpnAdminOrders();}
+      if(tab==="admin"){loadAdminDashboard();loadStarsAdminOrders();loadPremiumAdminOrders();loadSteamAdminOrders();loadProxyAdminOrders();loadVpnAdminOrders();loadVpnCatalogAdmin();}
       if(tab==="analytics") loadAnalytics();
       window.scrollTo({top:0,behavior:"smooth"});
     }
@@ -2307,6 +2284,7 @@
     document.addEventListener("visibilitychange", () => { if (!document.hidden) sendAnalyticsHeartbeat(); });
 
     let vpnCurrentOrderId = null;
+    loadVpnCatalog();
     async function createVpnOrder(months, planCode="standard"){
       const status=document.getElementById("vpnOrderStatus");
       const details=document.getElementById("vpnPaymentDetails");
@@ -2350,6 +2328,26 @@
           return '<div class="orderline" style="padding:12px;border:1px solid #6e5426;border-radius:12px"><b>Заказ №'+o.order_id+'</b><br>'+escapeHtml(o.title)+' · '+o.price_rub+' ₽<br>Статус: '+escapeHtml(o.status)+'<br>Действует до: '+escapeHtml(o.expires_at||"пока не выдано")+link+'</div>';
         }).join(""):'<div class="section-subtitle">VPN-заказов пока нет.</div>');
       }catch(e){box.textContent=e.message||"Не удалось загрузить подписки.";}
+    }
+    function resetVpnCatalogForm(){["vpnEditPlanCode","vpnEditTitle","vpnEditPrice","vpnEditTariffId"].forEach(id=>document.getElementById(id).value="");document.getElementById("vpnEditMonths").value="1";document.getElementById("vpnEditActive").checked=true;}
+    async function loadVpnCatalogAdmin(){
+      const host=document.getElementById("vpnCatalogAdminList"),status=document.getElementById("vpnCatalogAdminStatus");if(!host||!tg?.initData)return;
+      try{const response=await fetch(API_BASE+"/api/admin/vpn/catalog?initData="+encodeURIComponent(tg.initData),{cache:"no-store"});const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось загрузить тарифы");
+        host.innerHTML=(data.items||[]).map(p=>'<div style="padding:12px;border:1px solid #49405e;border-radius:12px;background:#11101c"><b>'+escapeHtml(p.title)+'</b><br>'+p.months+' мес. · '+Number(p.price_rub).toLocaleString("ru-RU")+' ₽ · tariff_id '+p.tariff_id+'<br>Статус: '+(p.active?'🟢 Включён':'⚫ Отключён')+'<div style="display:flex;gap:8px;margin-top:9px"><button type="button" onclick="editVpnCatalogPlan(\''+encodeURIComponent(JSON.stringify(p))+'\')">Изменить</button><button type="button" class="secondary" onclick="toggleVpnCatalogPlan(\''+p.plan_code+'\','+(!p.active)+')">'+(p.active?'Отключить':'Включить')+'</button></div></div>').join("")||'<div class="section-subtitle">Тарифов пока нет.</div>';if(status)status.textContent="Загружено тарифов: "+(data.items||[]).length;
+      }catch(e){if(status)status.textContent=e.message||"Ошибка загрузки каталога.";}
+    }
+    function editVpnCatalogPlan(encoded){const p=JSON.parse(decodeURIComponent(encoded));document.getElementById("vpnEditPlanCode").value=p.plan_code;document.getElementById("vpnEditTitle").value=p.title;document.getElementById("vpnEditMonths").value=p.months;document.getElementById("vpnEditPrice").value=p.price_rub;document.getElementById("vpnEditTariffId").value=p.tariff_id;document.getElementById("vpnEditActive").checked=!!p.active;document.getElementById("vpnEditTitle").scrollIntoView({behavior:"smooth",block:"center"});}
+    async function saveVpnCatalogPlan(){
+      const status=document.getElementById("vpnCatalogAdminStatus");const payload={initData:tg.initData,plan_code:document.getElementById("vpnEditPlanCode").value,title:document.getElementById("vpnEditTitle").value.trim(),months:Number(document.getElementById("vpnEditMonths").value),price_rub:Number(document.getElementById("vpnEditPrice").value),tariff_id:Number(document.getElementById("vpnEditTariffId").value),active:document.getElementById("vpnEditActive").checked};status.textContent="Сохраняю тариф…";
+      try{const response=await fetch(API_BASE+"/api/admin/vpn/catalog/save",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось сохранить тариф");status.textContent="✅ Тариф сохранён.";resetVpnCatalogForm();await loadVpnCatalogAdmin();await loadVpnCatalog();}catch(e){status.textContent=e.message||"Ошибка сохранения.";}
+    }
+    async function toggleVpnCatalogPlan(plan_code,active){const status=document.getElementById("vpnCatalogAdminStatus");try{const response=await fetch(API_BASE+"/api/admin/vpn/catalog/toggle",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,plan_code,active})});const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось изменить статус");status.textContent=active?"✅ Тариф включён.":"Тариф отключён.";await loadVpnCatalogAdmin();await loadVpnCatalog();}catch(e){status.textContent=e.message||"Ошибка изменения статуса.";}}
+    async function loadVpnCatalog(){
+      const host=document.getElementById("vpnStandardCatalog");if(!host)return;
+      try{const response=await fetch(API_BASE+"/api/vpn/catalog",{cache:"no-store"});const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось загрузить VPN-каталог");
+        const items=(data.items||[]).filter(p=>p.plan_code==="standard"||p.plan_code.startsWith("standard_")||p.plan_code.startsWith("custom_"));
+        host.innerHTML=items.filter(p=>p.configured).map(p=>'<article class="vpn-card"><h3>🌍 '+escapeHtml(p.title)+'</h3><div class="proxy-meta"><span>Срок</span><b>'+p.months+' мес.</b></div><div class="proxy-meta"><span>Цена для клиента</span><b style="color:#f5d779;font-size:20px">'+Number(p.price_rub).toLocaleString("ru-RU")+' ₽</b></div><button type="button" style="margin-top:12px" onclick="createVpnOrder('+Number(p.months)+',\''+p.plan_code+'\')">Купить тариф</button></article>').join("")||'<div class="section-subtitle">Сейчас нет доступных стандартных тарифов.</div>';
+      }catch(e){host.textContent=e.message||"Не удалось загрузить тарифы.";}
     }
     async function loadVpnPartnerInfo(){
       const status=document.getElementById("vpnPartnerStatus"),box=document.getElementById("vpnPartnerInfo");
