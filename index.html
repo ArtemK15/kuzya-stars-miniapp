@@ -2340,7 +2340,7 @@
           const period=p.period_label||((Number(p.months)>0)?p.months+' мес.':'—');
           const button=p.button_label||'Выбрать';
           const oldPrice=old>price?'<span style="margin-left:8px;color:#64748b;font-size:13px;font-weight:500;text-decoration:line-through">'+old.toLocaleString("ru-RU")+' ₽</span>':'';
-          const discountBadge=old>price?'<span style="display:inline-flex;margin:0 0 8px;padding:4px 9px;border-radius:20px;background:#dcfce7;color:#087b53;font-size:11px;font-weight:800">-'+discount+'%</span>':'';
+          const discountBadge=old>price?'<span style="display:inline-flex;align-self:flex-start;width:max-content;max-width:max-content;flex:0 0 auto;margin:0 0 8px;padding:4px 9px;border-radius:20px;background:#dcfce7;color:#087b53;font-size:11px;font-weight:800">-'+discount+'%</span>':'';
           const badge=p.badge?'<div style="align-self:flex-start;display:inline-flex;padding:4px 10px;margin-bottom:8px;border:1px solid #d8ad45;border-radius:20px;color:#8a5b00;background:#fff8df;font-size:11px;letter-spacing:1px;font-weight:800">'+escapeHtml(p.badge)+'</div>':'';
           const monthly=Number(p.months)>1?'<div class="vpn-monthly">'+Math.round(price/Number(p.months)).toLocaleString("ru-RU")+' ₽ в месяц</div>':'';
           const features=[];
