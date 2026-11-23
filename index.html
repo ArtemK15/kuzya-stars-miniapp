@@ -2345,7 +2345,14 @@
           const monthly=Number(p.months)>1?'<div class="vpn-monthly">'+Math.round(price/Number(p.months)).toLocaleString("ru-RU")+' ₽ в месяц</div>':'';
           const features=[];
           if(p.traffic)features.push(escapeHtml(p.traffic)+' трафика');
-          if(p.description)features.push(escapeHtml(p.description));
+          if(p.description){
+            features.push(escapeHtml(p.description));
+          }else{
+            features.push('Скорость до 1 Гбит/с');
+            features.push('Безлимит трафика');
+            features.push('До 10 устройств');
+            features.push('Все страны в одной подписке (без РФ) — локацию переключаете в Hiddify / Happ');
+          }
           const featureList=features.length?'<div class="vpn-features">'+features.map(x=>'<div class="vpn-feature">'+x+'</div>').join("")+'</div>':'';
           const purchase='<div class="vpn-card-spacer"></div><button type="button" '+(index===0?'style="background:#0d9488;border-color:#0d9488;color:#fff"':'')+' onclick="createVpnOrder('+Number(p.months)+',\''+p.plan_code+'\')">'+escapeHtml(button)+'</button>';
           return '<article class="vpn-card">'+discountBadge+badge+'<h3>'+escapeHtml(p.title)+'</h3><div class="vpn-price">'+price.toLocaleString("ru-RU")+' ₽'+oldPrice+'</div>'+monthly+featureList+purchase+'</article>';
