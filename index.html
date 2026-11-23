@@ -2307,7 +2307,8 @@
     document.addEventListener("visibilitychange", () => { if (!document.hidden) sendAnalyticsHeartbeat(); });
 
     let vpnCurrentOrderId = null;
-    loadVpnCatalog();\n    loadVpnServerLinksClient();
+    loadVpnCatalog();
+    loadVpnServerLinksClient();
     async function createVpnOrder(months, planCode="standard"){
       const status=document.getElementById("vpnOrderStatus");
       const details=document.getElementById("vpnPaymentDetails");
