@@ -2278,6 +2278,11 @@
     document.addEventListener("visibilitychange", () => { if (!document.hidden) sendAnalyticsHeartbeat(); });
 
     let vpnCurrentOrderId = null;
+    let vpnCheckoutCardNumber = "";
+    let vpnCheckoutBank = "";
+    async function copyVpnCheckoutCard(){
+      await copyCardNumber(vpnCheckoutCardNumber,formatCardNumber(vpnCheckoutCardNumber),vpnCheckoutBank);
+    }
     let vpnSelectedPaymentMethod = "tbank";
     function selectVpnPaymentMethod(method){
       vpnSelectedPaymentMethod=method;
@@ -2317,8 +2322,9 @@
         document.getElementById("vpnCheckoutAmount").textContent="К оплате: "+Number(data.price_rub).toLocaleString("ru-RU")+" ₽";
         let html="";
         const isSber=p.bank==="sber",bank=isSber?"Сбера":"Т-Банка",card=String(p.card_number||"");
+        vpnCheckoutCardNumber=card;vpnCheckoutBank=bank;
         document.getElementById("vpnCheckoutTitle").textContent="💳 Перевод на карту "+bank;
-        html='<div class="card-number-box"><span>Номер карты '+bank+'</span><strong>'+escapeHtml(formatCardNumber(card))+'</strong></div><button type="button" style="margin-top:10px;background:linear-gradient(100deg,#8b6323,#e3bb51);color:#17120a" onclick="copyCardNumber(\\''+card+'\\',\\''+formatCardNumber(card)+'\\',\\''+bank+'\\')">📋 Скопировать номер карты</button>';
+        html='<div class="card-number-box"><span>Номер карты '+bank+'</span><strong>'+escapeHtml(formatCardNumber(card))+'</strong></div><button type="button" style="margin-top:10px;background:linear-gradient(100deg,#8b6323,#e3bb51);color:#17120a" onclick="copyVpnCheckoutCard()">📋 Скопировать номер карты</button>';
         document.getElementById("vpnCheckoutPayment").innerHTML=html;
         document.getElementById("vpnStandardCatalog").style.display="none";
         document.getElementById("vpnPaymentChooser").style.display="none";
