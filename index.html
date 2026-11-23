@@ -554,9 +554,8 @@
     <p class="section-subtitle">Выбери тариф. В стандартных подписках доступны все перечисленные серверы; бюджетный тариф ограничен одним сервером.</p>
     <div id="vpnPaymentChooser" style="margin-top:16px;padding:15px;border:1px solid #6f5526;border-radius:15px;background:#171522">
       <div style="font-weight:700;margin-bottom:10px">Способ оплаты</div>
-      <div class="payment-methods" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
-        <button type="button" id="vpnSbpMethodButton" class="payment-method active" onclick="selectVpnPaymentMethod('sbp')">🏦 СБП</button>
-        <button type="button" id="vpnTbankMethodButton" class="payment-method" onclick="selectVpnPaymentMethod('tbank')">💳 Карта Т-Банка</button>
+      <div class="payment-methods" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+        <button type="button" id="vpnTbankMethodButton" class="payment-method active" onclick="selectVpnPaymentMethod('tbank')">💳 Карта Т-Банка</button>
         <button type="button" id="vpnSberMethodButton" class="payment-method" onclick="selectVpnPaymentMethod('sber')">💚 Карта Сбера</button>
       </div>
       <div class="section-subtitle" style="margin-top:9px">После выбора тарифа появятся реквизиты для перевода. Оплата проверяется вручную.</div>
@@ -2279,15 +2278,15 @@
     document.addEventListener("visibilitychange", () => { if (!document.hidden) sendAnalyticsHeartbeat(); });
 
     let vpnCurrentOrderId = null;
-    let vpnSelectedPaymentMethod = "sbp";
+    let vpnSelectedPaymentMethod = "tbank";
     function selectVpnPaymentMethod(method){
       vpnSelectedPaymentMethod=method;
-      [["sbp","vpnSbpMethodButton"],["tbank","vpnTbankMethodButton"],["sber","vpnSberMethodButton"]].forEach(([key,id])=>{
+      [["tbank","vpnTbankMethodButton"],["sber","vpnSberMethodButton"]].forEach(([key,id])=>{
         const button=document.getElementById(id);if(button)button.classList.toggle("active",key===method);
       });
     }
     function refreshVpnPaymentMethods(){
-      const options=[["sbp","vpnSbpMethodButton","sbp_enabled"],["tbank","vpnTbankMethodButton","tbank_enabled"],["sber","vpnSberMethodButton","sber_enabled"]];
+      const options=[["tbank","vpnTbankMethodButton","tbank_enabled"],["sber","vpnSberMethodButton","sber_enabled"]];
       options.forEach(([method,id,flag])=>{const button=document.getElementById(id);if(button)button.style.display=paymentMethodsConfig[flag]?"":"none";});
       if(!paymentMethodsConfig[vpnSelectedPaymentMethod+"_enabled"]){
         const next=options.find(([method,id,flag])=>paymentMethodsConfig[flag]);
@@ -2317,14 +2316,9 @@
         document.getElementById("vpnCheckoutOrder").textContent="Заказ: KZ-VPN-"+data.order_id;
         document.getElementById("vpnCheckoutAmount").textContent="К оплате: "+Number(data.price_rub).toLocaleString("ru-RU")+" ₽";
         let html="";
-        if(p.type==="sbp"){
-          document.getElementById("vpnCheckoutTitle").textContent="🏦 Оплата по СБП";
-          html='<div class="card-number-box"><span>Оплата по СБП</span><strong>Перейти к оплате</strong></div><a href="'+escapeHtml(p.url||"")+'" target="_blank" rel="noopener noreferrer" style="display:block;margin-top:12px;padding:13px;border-radius:10px;background:linear-gradient(100deg,#8b6323,#e3bb51);color:#17120a;text-decoration:none;font-weight:700">🏦 Открыть оплату в банке</a>';
-        }else{
-          const isSber=p.bank==="sber",bank=isSber?"Сбера":"Т-Банка",card=String(p.card_number||"");
-          document.getElementById("vpnCheckoutTitle").textContent="💳 Перевод на карту "+(isSber?"Сбера":"Т-Банка");
-          html='<div class="card-number-box"><span>Номер карты '+bank+'</span><strong>'+escapeHtml(formatCardNumber(card))+'</strong></div><button type="button" style="margin-top:10px;background:linear-gradient(100deg,#8b6323,#e3bb51);color:#17120a" onclick="copyCardNumber(\''+card+'\',\''+formatCardNumber(card)+'\',\''+bank+'\')">📋 Скопировать номер карты</button>';
-        }
+        const isSber=p.bank==="sber",bank=isSber?"Сбера":"Т-Банка",card=String(p.card_number||"");
+        document.getElementById("vpnCheckoutTitle").textContent="💳 Перевод на карту "+bank;
+        html='<div class="card-number-box"><span>Номер карты '+bank+'</span><strong>'+escapeHtml(formatCardNumber(card))+'</strong></div><button type="button" style="margin-top:10px;background:linear-gradient(100deg,#8b6323,#e3bb51);color:#17120a" onclick="copyCardNumber(\\''+card+'\\',\\''+formatCardNumber(card)+'\\',\\''+bank+'\\')">📋 Скопировать номер карты</button>';
         document.getElementById("vpnCheckoutPayment").innerHTML=html;
         document.getElementById("vpnStandardCatalog").style.display="none";
         document.getElementById("vpnPaymentChooser").style.display="none";
