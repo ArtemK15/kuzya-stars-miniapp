@@ -555,16 +555,25 @@
     <div class="products" style="grid-template-columns:1fr">
       <div id="vpnStandardCatalog" style="display:grid;gap:14px"></div>
     </div>
-    <div style="margin-top:16px;padding:15px;border:1px solid #6f5526;border-radius:15px;background:#171522">
-      <label for="vpnPaymentMethod" style="display:block;margin-bottom:8px">Способ оплаты</label>
-      <select id="vpnPaymentMethod" style="width:100%;padding:12px;background:#0b0b18;color:#fff;border:1px solid #6e5426">
-        <option value="sbp">СБП</option><option value="tbank">Карта Т-Банка</option><option value="sber">Карта Сбера</option>
-      </select>
-      <div class="section-subtitle" style="margin-top:9px">После создания заказа переведи точную сумму и нажми «Я оплатил». Подписка будет выдана после проверки оплаты.</div>
-      <div id="vpnOrderStatus" class="section-subtitle" style="margin-top:10px"></div>
-      <div id="vpnPaymentDetails" style="display:none;text-align:left;margin-top:12px"></div>
-      <button id="vpnPaidButton" type="button" style="display:none;margin-top:10px" onclick="reportVpnPayment()">✅ Я оплатил</button>
+    <div id="vpnPaymentChooser" style="margin-top:16px;padding:15px;border:1px solid #6f5526;border-radius:15px;background:#171522">
+      <div style="font-weight:700;margin-bottom:10px">Способ оплаты</div>
+      <div class="payment-methods" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+        <button type="button" id="vpnSbpMethodButton" class="payment-method active" onclick="selectVpnPaymentMethod('sbp')">🏦 СБП</button>
+        <button type="button" id="vpnTbankMethodButton" class="payment-method" onclick="selectVpnPaymentMethod('tbank')">💳 Карта Т-Банка</button>
+        <button type="button" id="vpnSberMethodButton" class="payment-method" onclick="selectVpnPaymentMethod('sber')">💚 Карта Сбера</button>
+      </div>
+      <div class="section-subtitle" style="margin-top:9px">После выбора тарифа появятся реквизиты для перевода. Оплата проверяется вручную.</div>
     </div>
+    <div id="vpnOrderStatus" class="section-subtitle" style="margin-top:10px"></div>
+    <section id="vpnCheckoutScreen" style="display:none;margin-top:16px;padding:15px;border:1px solid #6f5526;border-radius:15px;background:#171522;text-align:center">
+      <h2 id="vpnCheckoutTitle" style="margin:4px 0 14px;color:#f5d779">🏦 Оплата VPN-заказа</h2>
+      <div class="orderline" id="vpnCheckoutOrder"></div>
+      <div class="orderline" id="vpnCheckoutAmount"></div>
+      <div id="vpnCheckoutPayment" style="margin-top:12px"></div>
+      <p style="font-size:12px;color:#aaa;line-height:1.5;text-align:left;margin-top:12px">Переведи точную сумму заказа на указанные реквизиты. После перевода нажми «Я оплатил» — оплата будет проверена вручную.</p>
+      <button id="vpnPaidButton" type="button" style="margin-top:10px" onclick="reportVpnPayment()">✅ Я оплатил</button>
+      <button type="button" class="secondary" style="margin-top:8px" onclick="backToVpnCatalog()">Вернуться в каталог</button>
+    </section>
     <div id="vpnMyOrders" style="margin-top:18px"></div>
     <button type="button" class="secondary" onclick="showTab('shop')">← Назад в магазин</button>
   </section>
@@ -2054,6 +2063,7 @@
         const data = await response.json();
         if (!response.ok) throw new Error(data.detail || "Не удалось загрузить способы оплаты");
         paymentMethodsConfig = {...paymentMethodsConfig, ...data};
+        if(typeof refreshVpnPaymentMethods==="function")refreshVpnPaymentMethods();
         document.getElementById("bankCardNumber").textContent = formatCardNumber(paymentMethodsConfig.tbank_card);
         document.getElementById("sberCardNumber").textContent = formatCardNumber(paymentMethodsConfig.sber_card);
         document.getElementById("sbpMethodButton").style.display = paymentMethodsConfig.sbp_enabled ? "" : "none";
@@ -2269,38 +2279,73 @@
     document.addEventListener("visibilitychange", () => { if (!document.hidden) sendAnalyticsHeartbeat(); });
 
     let vpnCurrentOrderId = null;
+    let vpnSelectedPaymentMethod = "sbp";
+    function selectVpnPaymentMethod(method){
+      vpnSelectedPaymentMethod=method;
+      [["sbp","vpnSbpMethodButton"],["tbank","vpnTbankMethodButton"],["sber","vpnSberMethodButton"]].forEach(([key,id])=>{
+        const button=document.getElementById(id);if(button)button.classList.toggle("active",key===method);
+      });
+    }
+    function refreshVpnPaymentMethods(){
+      const options=[["sbp","vpnSbpMethodButton","sbp_enabled"],["tbank","vpnTbankMethodButton","tbank_enabled"],["sber","vpnSberMethodButton","sber_enabled"]];
+      options.forEach(([method,id,flag])=>{const button=document.getElementById(id);if(button)button.style.display=paymentMethodsConfig[flag]?"":"none";});
+      if(!paymentMethodsConfig[vpnSelectedPaymentMethod+"_enabled"]){
+        const next=options.find(([method,id,flag])=>paymentMethodsConfig[flag]);
+        if(next)selectVpnPaymentMethod(next[0]);
+      }
+    }
+    function backToVpnCatalog(){
+      document.getElementById("vpnCheckoutScreen").style.display="none";
+      document.getElementById("vpnStandardCatalog").style.display="grid";
+      document.getElementById("vpnPaymentChooser").style.display="";
+      document.getElementById("vpnOrderStatus").textContent="";
+      document.getElementById("vpnMyOrders").style.display="";
+    }
     loadVpnCatalog();
     async function createVpnOrder(months, planCode="standard"){
       const status=document.getElementById("vpnOrderStatus");
-      const details=document.getElementById("vpnPaymentDetails");
+      const checkout=document.getElementById("vpnCheckoutScreen");
       const paid=document.getElementById("vpnPaidButton");
-      details.style.display="none";details.innerHTML="";paid.style.display="none";vpnCurrentOrderId=null;
       if(!tg?.initData){status.textContent="Открой Mini App внутри Telegram, чтобы оформить VPN.";return;}
       status.textContent="Создаю VPN-заказ…";
       try{
-        const method=document.getElementById("vpnPaymentMethod").value;
+        const method=vpnSelectedPaymentMethod;
         const response=await fetch(API_BASE+"/api/vpn/orders",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,months:months,plan_code:planCode,payment_method:method})});
         const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось создать VPN-заказ");
         vpnCurrentOrderId=data.order_id;
         const p=data.payment||{};
-        let html='<div class="orderline"><b>VPN-заказ №'+data.order_id+'</b><br>'+Number(data.price_rub).toLocaleString("ru-RU")+' ₽</div>';
-        if(p.type==="sbp") html+='<div class="orderline">Оплата через СБП<br>'+(p.url?'<a href="'+escapeHtml(p.url)+'" target="_blank" rel="noopener" style="color:#f4cc67">Перейти к оплате</a>':'Ссылка СБП не настроена')+'</div>';
-        else html+='<div class="orderline">Перевод на карту<br><b>'+escapeHtml(p.card_number||"")+'</b></div>';
-        details.innerHTML=html;details.style.display="block";paid.style.display="block";paid.disabled=false;
-        status.textContent="Заказ создан. Переведи ровно "+data.price_rub+" ₽, затем нажми «Я оплатил».";
+        document.getElementById("vpnCheckoutOrder").textContent="Заказ: KZ-VPN-"+data.order_id;
+        document.getElementById("vpnCheckoutAmount").textContent="К оплате: "+Number(data.price_rub).toLocaleString("ru-RU")+" ₽";
+        let html="";
+        if(p.type==="sbp"){
+          document.getElementById("vpnCheckoutTitle").textContent="🏦 Оплата по СБП";
+          html='<div class="card-number-box"><span>Оплата по СБП</span><strong>Перейти к оплате</strong></div><a href="'+escapeHtml(p.url||"")+'" target="_blank" rel="noopener noreferrer" style="display:block;margin-top:12px;padding:13px;border-radius:10px;background:linear-gradient(100deg,#8b6323,#e3bb51);color:#17120a;text-decoration:none;font-weight:700">🏦 Открыть оплату в банке</a>';
+        }else{
+          const isSber=p.bank==="sber",bank=isSber?"Сбера":"Т-Банка",card=String(p.card_number||"");
+          document.getElementById("vpnCheckoutTitle").textContent="💳 Перевод на карту "+(isSber?"Сбера":"Т-Банка");
+          html='<div class="card-number-box"><span>Номер карты '+bank+'</span><strong>'+escapeHtml(formatCardNumber(card))+'</strong></div><button type="button" style="margin-top:10px;background:linear-gradient(100deg,#8b6323,#e3bb51);color:#17120a" onclick="copyCardNumber(\''+card+'\',\''+formatCardNumber(card)+'\',\''+bank+'\')">📋 Скопировать номер карты</button>';
+        }
+        document.getElementById("vpnCheckoutPayment").innerHTML=html;
+        document.getElementById("vpnStandardCatalog").style.display="none";
+        document.getElementById("vpnPaymentChooser").style.display="none";
+        document.getElementById("vpnMyOrders").style.display="none";
+        status.textContent="";
+        checkout.style.display="block";
+        paid.style.display="";paid.disabled=false;
         await loadMyVpnOrders();
       }catch(e){status.textContent=e.message||"Ошибка создания VPN-заказа.";}
     }
     async function reportVpnPayment(){
       const status=document.getElementById("vpnOrderStatus"),button=document.getElementById("vpnPaidButton");
       if(!vpnCurrentOrderId||!tg?.initData)return;
-      button.disabled=true;status.textContent="Отправляю уведомление об оплате…";
+      button.disabled=true;button.textContent="Отправляю…";
       try{
         const response=await fetch(API_BASE+"/api/vpn/payment-reported",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,order_id:vpnCurrentOrderId})});
         const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось отправить уведомление");
-        status.textContent="✅ Заявка об оплате отправлена. После проверки администратором VPN появится здесь и придёт в Telegram.";
-        button.style.display="none";await loadMyVpnOrders();
-      }catch(e){status.textContent=e.message||"Ошибка отправки.";button.disabled=false;}
+        button.textContent="✅ Оплата заявлена";button.disabled=true;
+        status.textContent="Заявка об оплате отправлена. После проверки администратором VPN появится здесь и придёт в Telegram.";
+        await loadMyVpnOrders();
+      }catch(e){status.textContent=e.message||"Ошибка отправки.";button.disabled=false;button.textContent="✅ Я оплатил";}
     }
     async function loadMyVpnOrders(){
       const box=document.getElementById("vpnMyOrders");if(!box||!tg?.initData)return;
