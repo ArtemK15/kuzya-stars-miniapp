@@ -569,11 +569,6 @@
       <div id="vpnPaymentDetails" style="display:none;text-align:left;margin-top:12px"></div>
       <button id="vpnPaidButton" type="button" style="display:none;margin-top:10px" onclick="reportVpnPayment()">✅ Я оплатил</button>
     </div>
-    <div id="vpnClientServerLinks" style="margin-top:18px;padding:15px;border:1px solid #6f5526;border-radius:15px;background:#171522">
-      <h3 style="color:#f5d779;margin-top:0">🔗 Ссылки подключения</h3>
-      <div class="section-subtitle">Ссылки на VPN-серверы, добавленные администратором.</div>
-      <div id="vpnClientServerLinksList">Загружаю ссылки…</div>
-    </div>
     <div id="vpnMyOrders" style="margin-top:18px"></div>
     <button type="button" class="secondary" onclick="showTab('shop')">← Назад в магазин</button>
   </section>
@@ -688,22 +683,6 @@
     <button type="button" class="secondary" onclick="loadProxyAdminOrders()">🔄 Обновить Proxy-заказы</button>
     <div id="proxyAdminStatus" class="section-subtitle" style="margin-top:8px"></div>
     <div id="proxyAdminOrders" style="display:grid;gap:10px;margin:12px 0"></div>
-    <h3>🔗 Ссылки подключения VPN-клиентов</h3>
-    <p class="section-subtitle">Добавляй и обновляй клиентские ссылки для серверов. Они будут отображаться покупателям в разделе VPN.</p>
-    <div style="padding:14px;border:1px solid #6f5526;border-radius:14px;background:#171522;margin:10px 0">
-      <input type="hidden" id="vpnLinkOriginalCode">
-      <label style="display:block;margin:6px 0">Код сервера (латиницей)</label>
-      <input id="vpnLinkCode" maxlength="64" placeholder="например germany_1" style="width:100%;padding:11px;background:#0b0b18;color:#fff;border:1px solid #49405e">
-      <label style="display:block;margin:10px 0 6px">Название сервера</label>
-      <input id="vpnLinkTitle" maxlength="100" placeholder="Germany #1" style="width:100%;padding:11px;background:#0b0b18;color:#fff;border:1px solid #49405e">
-      <label style="display:block;margin:10px 0 6px">Ссылка подключения</label>
-      <input id="vpnLinkUrl" type="url" maxlength="2000" placeholder="https://… или ссылка подписки клиента" style="width:100%;padding:11px;background:#0b0b18;color:#fff;border:1px solid #49405e">
-      <label style="display:flex;align-items:center;gap:8px;margin:12px 0;color:#ddd6ff"><input id="vpnLinkActive" type="checkbox" checked style="width:auto"> Показывать покупателям</label>
-      <button type="button" onclick="saveVpnServerLink()">💾 Сохранить ссылку</button>
-      <button type="button" class="secondary" onclick="resetVpnServerLinkForm()">＋ Новая ссылка</button>
-      <div id="vpnServerLinksAdminStatus" class="section-subtitle" style="margin-top:8px"></div>
-    </div>
-    <div id="vpnServerLinksAdminList" style="display:grid;gap:9px;margin:12px 0"></div>
     <a href="https://hiddifysales.com/partner" target="_blank" rel="noopener noreferrer" style="display:block;text-align:center;padding:13px;margin:10px 0;border:1px solid #8d6b2c;border-radius:12px;background:linear-gradient(100deg,#35260f,#211b2d);color:#f5d779;text-decoration:none;font-weight:bold">↗ Открыть HiddifySales</a>
     <h3>🛡 Управление VPN-тарифами</h3>
     <p class="section-subtitle">Меняй название и цену, добавляй тарифы с tariff_id из HiddifySales и включай/отключай их. Изменения сохраняются в базе данных.</p>
@@ -2312,7 +2291,6 @@
 
     let vpnCurrentOrderId = null;
     loadVpnCatalog();
-    loadVpnServerLinksClient();
     async function createVpnOrder(months, planCode="standard"){
       const status=document.getElementById("vpnOrderStatus");
       const details=document.getElementById("vpnPaymentDetails");
@@ -2387,31 +2365,6 @@
         const items=(data.items||[]).filter(p=>p.plan_code==="standard"||p.plan_code.startsWith("standard_")||p.plan_code.startsWith("custom_"));
         host.innerHTML=items.filter(p=>p.configured).map(p=>'<article class="vpn-card"><h3>🌍 '+escapeHtml(p.title)+'</h3>'+(p.description?'<p class="section-subtitle">'+escapeHtml(p.description)+'</p>':'')+'<div class="proxy-meta"><span>Срок</span><b>'+p.months+' мес.</b></div><div class="proxy-meta"><span>Цена для клиента</span><b style="color:#f5d779;font-size:20px">'+Number(p.price_rub).toLocaleString("ru-RU")+' ₽</b></div>'+(Number(p.old_price_rub)>Number(p.price_rub)?'<div class="proxy-meta"><span>Старая цена</span><s style="color:#999">'+Number(p.old_price_rub).toLocaleString("ru-RU")+' ₽</s></div>':'')+'<button type="button" style="margin-top:12px" onclick="createVpnOrder('+Number(p.months)+',\''+p.plan_code+'\')">Купить тариф</button></article>').join("")||'<div class="section-subtitle">Сейчас нет доступных стандартных тарифов.</div>';
       }catch(e){host.textContent=e.message||"Не удалось загрузить тарифы.";}
-    }
-    function resetVpnServerLinkForm(){document.getElementById("vpnLinkOriginalCode").value="";document.getElementById("vpnLinkCode").value="";document.getElementById("vpnLinkCode").disabled=false;document.getElementById("vpnLinkTitle").value="";document.getElementById("vpnLinkUrl").value="";document.getElementById("vpnLinkActive").checked=true;}
-    async function loadVpnServerLinksAdmin(){
-      const host=document.getElementById("vpnServerLinksAdminList"),status=document.getElementById("vpnServerLinksAdminStatus");if(!host||!tg?.initData)return;
-      try{const response=await fetch(API_BASE+"/api/admin/vpn/server-links?initData="+encodeURIComponent(tg.initData),{cache:"no-store"});const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось загрузить ссылки");
-        host.innerHTML=(data.items||[]).map(p=>'<div style="padding:12px;border:1px solid #49405e;border-radius:12px;background:#11101c"><b>'+escapeHtml(p.title)+'</b><br><small style="overflow-wrap:anywhere">'+escapeHtml(p.connection_url)+'</small><br>Статус: '+(p.active?'🟢 Видна покупателям':'⚫ Скрыта')+'<div style="display:flex;gap:8px;margin-top:9px"><button type="button" onclick="editVpnServerLink(\''+encodeURIComponent(JSON.stringify(p))+'\')">Изменить</button><button type="button" class="secondary" onclick="deleteVpnServerLink(\''+p.server_code+'\')">Удалить</button></div></div>').join("")||'<div class="section-subtitle">Ссылки ещё не добавлены.</div>';
-        if(status)status.textContent="Ссылок в списке: "+(data.items||[]).length;
-      }catch(e){if(status)status.textContent=e.message||"Ошибка загрузки ссылок.";}
-    }
-    function editVpnServerLink(encoded){const p=JSON.parse(decodeURIComponent(encoded));document.getElementById("vpnLinkOriginalCode").value=p.server_code;document.getElementById("vpnLinkCode").value=p.server_code;document.getElementById("vpnLinkCode").disabled=true;document.getElementById("vpnLinkTitle").value=p.title;document.getElementById("vpnLinkUrl").value=p.connection_url;document.getElementById("vpnLinkActive").checked=!!p.active;document.getElementById("vpnLinkTitle").scrollIntoView({behavior:"smooth",block:"center"});}
-    async function saveVpnServerLink(){
-      const status=document.getElementById("vpnServerLinksAdminStatus"),payload={initData:tg.initData,server_code:document.getElementById("vpnLinkCode").value.trim(),title:document.getElementById("vpnLinkTitle").value.trim(),connection_url:document.getElementById("vpnLinkUrl").value.trim(),active:document.getElementById("vpnLinkActive").checked};
-      status.textContent="Сохраняю ссылку…";
-      try{const response=await fetch(API_BASE+"/api/admin/vpn/server-links/save",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось сохранить ссылку");status.textContent="✅ Ссылка сохранена.";resetVpnServerLinkForm();await loadVpnServerLinksAdmin();await loadVpnServerLinksClient();}catch(e){status.textContent=e.message||"Ошибка сохранения.";}
-    }
-    async function deleteVpnServerLink(server_code){
-      if(!confirm("Удалить ссылку этого VPN-сервера?"))return;
-      const status=document.getElementById("vpnServerLinksAdminStatus");
-      try{const response=await fetch(API_BASE+"/api/admin/vpn/server-links/delete",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData:tg.initData,server_code})});const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось удалить ссылку");status.textContent="Ссылка удалена.";await loadVpnServerLinksAdmin();await loadVpnServerLinksClient();}catch(e){status.textContent=e.message||"Ошибка удаления.";}
-    }
-    async function loadVpnServerLinksClient(){
-      const host=document.getElementById("vpnClientServerLinksList");if(!host)return;
-      try{const response=await fetch(API_BASE+"/api/vpn/server-links",{cache:"no-store"});const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось загрузить ссылки");
-        host.innerHTML=(data.items||[]).map(p=>'<a href="'+escapeHtml(p.connection_url)+'" target="_blank" rel="noopener noreferrer" style="display:block;padding:12px;margin:8px 0;border:1px solid #49405e;border-radius:11px;background:#11101c;color:#f5d779;text-decoration:none;font-weight:bold">🌐 '+escapeHtml(p.title)+' <span style="float:right">↗</span></a>').join("")||'<div class="section-subtitle">Ссылки подключения пока не добавлены.</div>';
-      }catch(e){host.textContent=e.message||"Не удалось загрузить ссылки.";}
     }
     async function loadVpnPartnerInfo(){
       const status=document.getElementById("vpnPartnerStatus"),box=document.getElementById("vpnPartnerInfo");
