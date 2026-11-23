@@ -2344,7 +2344,7 @@
     async function loadVpnCatalog(){
       const host=document.getElementById("vpnStandardCatalog");if(!host)return;
       try{const response=await fetch(API_BASE+"/api/vpn/catalog",{cache:"no-store"});const data=await response.json();if(!response.ok)throw new Error(data.detail||"Не удалось загрузить VPN-каталог");
-        const items=(data.items||[]).filter(p=>p.configured);
+        const items=(data.items||[]).filter(p=>p.active!==false);
         host.innerHTML=items.map(p=>{
           const price=Number(p.price_rub)||0,old=Number(p.old_price_rub)||0,saving=Math.max(0,old-price),discount=old>price?((saving/old)*100).toFixed(2).replace(".",","):"";
           const badge=p.badge?'<div style="display:inline-block;padding:4px 10px;margin-bottom:8px;border:1px solid #d8ad45;border-radius:20px;color:#f5d779;font-size:11px;letter-spacing:1px;font-weight:800">'+escapeHtml(p.badge)+'</div>':'';
@@ -2352,7 +2352,8 @@
           const oldRow=old>price?'<div class="proxy-meta"><span>Обычная цена</span><b><s style="color:#999">'+old.toLocaleString("ru-RU")+' ₽</s></b></div><div class="proxy-meta"><span>Скидка</span><b>'+discount+'% · экономия '+saving.toLocaleString("ru-RU")+' ₽</b></div>':'';
           const period=p.period_label||((Number(p.months)>0)?p.months+' мес.':'—');
           const button=p.button_label||'Купить тариф';
-          return '<article class="vpn-card">'+badge+'<h3>'+escapeHtml(p.title)+'</h3>'+(p.description?'<p class="section-subtitle">'+escapeHtml(p.description)+'</p>':'')+traffic+'<div class="proxy-meta"><span>Срок</span><b>'+escapeHtml(period)+'</b></div>'+oldRow+'<div class="proxy-meta"><span>Цена для клиента</span><b style="color:#f5d779;font-size:20px">'+price.toLocaleString("ru-RU")+' ₽</b></div><button type="button" style="margin-top:12px" onclick="createVpnOrder('+Number(p.months)+',\''+p.plan_code+'\')">'+escapeHtml(button)+'</button></article>';
+          const purchase=p.configured?'<button type="button" style="margin-top:12px" onclick="createVpnOrder('+Number(p.months)+',\''+p.plan_code+'\')">'+escapeHtml(button)+'</button>':'<div class="section-subtitle" style="margin-top:12px;color:#e7b85c">⚠️ Тариф временно недоступен для покупки: администратору нужно указать корректный Hiddify tariff_id.</div>';
+          return '<article class="vpn-card">'+badge+'<h3>'+escapeHtml(p.title)+'</h3>'+(p.description?'<p class="section-subtitle">'+escapeHtml(p.description)+'</p>':'')+traffic+'<div class="proxy-meta"><span>Срок</span><b>'+escapeHtml(period)+'</b></div>'+oldRow+'<div class="proxy-meta"><span>Цена для клиента</span><b style="color:#f5d779;font-size:20px">'+price.toLocaleString("ru-RU")+' ₽</b></div>'+purchase+'</article>';
         }).join("")||'<div class="section-subtitle">Сейчас нет доступных VPN-тарифов.</div>';
       }catch(e){host.textContent=e.message||"Не удалось загрузить тарифы.";}
     }
