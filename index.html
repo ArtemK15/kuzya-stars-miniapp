@@ -2354,7 +2354,7 @@
             features.push('Все страны в одной подписке (без РФ) — локацию переключаете в Hiddify / Happ');
           }
           const featureList=features.length?'<div class="vpn-features">'+features.map(x=>'<div class="vpn-feature">'+x+'</div>').join("")+'</div>':'';
-          const purchase='<div class="vpn-card-spacer"></div><button type="button" '+(index===0?'style="background:#0d9488;border-color:#0d9488;color:#fff"':'')+' onclick="createVpnOrder('+Number(p.months)+',\''+p.plan_code+'\')">'+escapeHtml(button)+'</button>';
+          const purchase='<div class="vpn-card-spacer"></div><button type="button" onclick="createVpnOrder('+Number(p.months)+',\''+p.plan_code+'\')">'+escapeHtml(button)+'</button>';
           return '<article class="vpn-card">'+discountBadge+badge+'<h3>'+escapeHtml(p.title)+'</h3><div class="vpn-price">'+price.toLocaleString("ru-RU")+' ₽'+oldPrice+'</div>'+monthly+featureList+purchase+'</article>';
         }).join("")||'<div class="section-subtitle">Сейчас нет доступных VPN-тарифов.</div>';
       }catch(e){host.textContent=e.message||"Не удалось загрузить тарифы.";}
